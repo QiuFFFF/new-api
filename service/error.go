@@ -215,6 +215,22 @@ func ApplyErrorMapping(newApiErr *types.NewAPIError, errorMappingStr string) {
 	errMessage := newApiErr.Error()
 	errCode := string(newApiErr.GetErrorCode())
 	errType := string(newApiErr.GetErrorType())
+	// Extract upstream error code/type from RelayError when available
+	if newApiErr.RelayError != nil {
+		switch e := newApiErr.RelayError.(type) {
+		case types.OpenAIError:
+			if e.Type != "" {
+				errType = e.Type
+			}
+			if e.Code != nil {
+				errCode = fmt.Sprintf("%v", e.Code)
+			}
+		case types.ClaudeError:
+			if e.Type != "" {
+				errType = e.Type
+			}
+		}
+	}
 	for _, pattern := range config.Patterns {
 		if matchesPattern(pattern, errMessage, errCode, errType) {
 			applyReplacements(newApiErr, pattern)

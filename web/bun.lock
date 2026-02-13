@@ -14,6 +14,7 @@
         "axios": "1.13.5",
         "clsx": "^2.1.1",
         "dayjs": "^1.11.11",
+        "dompurify": "^3.3.1",
         "history": "^5.3.0",
         "i18next": "^23.16.8",
         "i18next-browser-languagedetector": "^7.2.0",
@@ -993,7 +994,7 @@
 
     "doctrine": ["doctrine@3.0.0", "https://registry.npmmirror.com/doctrine/-/doctrine-3.0.0.tgz", { "dependencies": { "esutils": "^2.0.2" } }, "sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w=="],
 
-    "dompurify": ["dompurify@3.2.6", "https://registry.npmmirror.com/dompurify/-/dompurify-3.2.6.tgz", { "optionalDependencies": { "@types/trusted-types": "^2.0.7" } }, "sha512-/2GogDQlohXPZe6D6NOgQvXLPSYBqIWMnZ8zzOhn09REE4eyAzb+Hed3jhoM9OkuaJ8P6ZGTTVWQKAi8ieIzfQ=="],
+    "dompurify": ["dompurify@3.3.1", "https://registry.npmmirror.com/dompurify/-/dompurify-3.3.1.tgz", { "optionalDependencies": { "@types/trusted-types": "^2.0.7" } }, "sha512-qkdCKzLNtrgPFP1Vo+98FRzJnBRGe4ffyCea9IwHB1fyxPOeNTHpLKYGd4Uk9xvNoH0ZoOjwZxNptyMwqrId1Q=="],
 
     "dotenv": ["dotenv@16.6.1", "https://registry.npmmirror.com/dotenv/-/dotenv-16.6.1.tgz", {}, "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow=="],
 
@@ -2220,6 +2221,8 @@
     "leva/react-dropzone": ["react-dropzone@12.1.0", "https://registry.npmmirror.com/react-dropzone/-/react-dropzone-12.1.0.tgz", { "dependencies": { "attr-accept": "^2.2.2", "file-selector": "^0.5.0", "prop-types": "^15.8.1" }, "peerDependencies": { "react": ">= 16.8" } }, "sha512-iBYHA1rbopIvtzokEX4QubO6qk5IF/x3BtKGu74rF2JkQDXnwC4uO/lHKpaw4PJIV6iIAYOlwLv2FpiGyqHNog=="],
 
     "mdast-util-find-and-replace/escape-string-regexp": ["escape-string-regexp@5.0.0", "https://registry.npmmirror.com/escape-string-regexp/-/escape-string-regexp-5.0.0.tgz", {}, "sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw=="],
+
+    "mermaid/dompurify": ["dompurify@3.2.6", "https://registry.npmmirror.com/dompurify/-/dompurify-3.2.6.tgz", { "optionalDependencies": { "@types/trusted-types": "^2.0.7" } }, "sha512-/2GogDQlohXPZe6D6NOgQvXLPSYBqIWMnZ8zzOhn09REE4eyAzb+Hed3jhoM9OkuaJ8P6ZGTTVWQKAi8ieIzfQ=="],
 
     "mermaid/marked": ["marked@15.0.12", "https://registry.npmmirror.com/marked/-/marked-15.0.12.tgz", { "bin": { "marked": "bin/marked.js" } }, "sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA=="],
 
