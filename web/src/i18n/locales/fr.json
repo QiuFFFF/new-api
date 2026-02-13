@@ -703,6 +703,8 @@
     "启用请求体透传功能": "Activer la fonctionnalité de transmission du corps de la requête",
     "启用请求透传": "Activer la transmission de la requête",
     "启用额度消费日志记录": "Activer la journalisation de la consommation de quota",
+    "强制记录所有用户日志IP": "Forcer l'enregistrement de l'IP dans tous les journaux",
+    "开启后，无论用户个人设置如何，所有消费和错误日志都将记录客户端IP地址": "Après l'activation, tous les journaux de consommation et d'erreur enregistreront l'adresse IP du client, quels que soient les paramètres personnels de l'utilisateur",
     "启用验证": "Activer l'authentification",
     "启用违规扣费": "Activer la déduction de violation",
     "周": "semaine",
