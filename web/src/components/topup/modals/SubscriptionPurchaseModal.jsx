@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Banner,
   Modal,
@@ -27,6 +27,7 @@ import {
   Select,
   Divider,
   Tooltip,
+  Checkbox,
 } from '@douyinfe/semi-ui';
 import { Crown, CalendarClock, Package } from 'lucide-react';
 import { SiStripe } from 'react-icons/si';
@@ -37,6 +38,7 @@ import {
   formatSubscriptionDuration,
   formatSubscriptionResetPeriod,
 } from '../../../helpers/subscriptionFormat';
+import { marked } from 'marked';
 
 const { Text } = Typography;
 
@@ -56,7 +58,11 @@ const SubscriptionPurchaseModal = ({
   onPayStripe,
   onPayCreem,
   onPayEpay,
+  topupAgreement,
+  agreedToTopupAgreement,
+  setAgreedToTopupAgreement,
 }) => {
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
   const plan = selectedPlan?.plan;
   const totalAmount = Number(plan?.total_amount || 0);
   const { symbol, rate } = getCurrencyConfig();
@@ -76,6 +82,21 @@ const SubscriptionPurchaseModal = ({
     purchaseLimit > 0 && purchaseCount >= purchaseLimit;
 
   return (
+    <>
+    <Modal
+      title={t('充值协议')}
+      visible={showAgreementModal}
+      onCancel={() => setShowAgreementModal(false)}
+      onOk={() => {
+        setAgreedToTopupAgreement(true);
+        setShowAgreementModal(false);
+      }}
+      okText={t('同意')}
+      cancelText={t('取消')}
+      centered
+    >
+      <div dangerouslySetInnerHTML={{ __html: marked.parse(topupAgreement || '') }} />
+    </Modal>
     <Modal
       title={
         <div className='flex items-center'>
@@ -179,6 +200,30 @@ const SubscriptionPurchaseModal = ({
             />
           )}
 
+          {topupAgreement && (
+            <div className='pt-1'>
+              <Checkbox
+                checked={agreedToTopupAgreement}
+                onChange={(e) => setAgreedToTopupAgreement(e.target.checked)}
+              >
+                <Text type='tertiary'>
+                  {t('我已阅读并同意')}
+                  <Text
+                    strong
+                    className='cursor-pointer mx-1'
+                    style={{ color: '#2563eb' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowAgreementModal(true);
+                    }}
+                  >
+                    《{t('充值协议')}》
+                  </Text>
+                </Text>
+              </Checkbox>
+            </div>
+          )}
+
           {hasAnyPayment ? (
             <div className='space-y-3'>
               <Text size='small' type='tertiary'>
@@ -195,7 +240,7 @@ const SubscriptionPurchaseModal = ({
                       icon={<SiStripe size={14} color='#635BFF' />}
                       onClick={onPayStripe}
                       loading={paying}
-                      disabled={purchaseLimitReached}
+                      disabled={purchaseLimitReached || (topupAgreement && !agreedToTopupAgreement)}
                     >
                       Stripe
                     </Button>
@@ -207,7 +252,7 @@ const SubscriptionPurchaseModal = ({
                       icon={<IconCreditCard />}
                       onClick={onPayCreem}
                       loading={paying}
-                      disabled={purchaseLimitReached}
+                      disabled={purchaseLimitReached || (topupAgreement && !agreedToTopupAgreement)}
                     >
                       Creem
                     </Button>
@@ -235,7 +280,7 @@ const SubscriptionPurchaseModal = ({
                     type='primary'
                     onClick={onPayEpay}
                     loading={paying}
-                    disabled={!selectedEpayMethod || purchaseLimitReached}
+                    disabled={!selectedEpayMethod || purchaseLimitReached || (topupAgreement && !agreedToTopupAgreement)}
                   >
                     {t('支付')}
                   </Button>
@@ -253,6 +298,7 @@ const SubscriptionPurchaseModal = ({
         </div>
       ) : null}
     </Modal>
+    </>
   );
 };
 

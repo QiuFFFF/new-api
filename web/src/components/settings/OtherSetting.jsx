@@ -43,6 +43,7 @@ const OtherSetting = () => {
     Notice: '',
     [LEGAL_USER_AGREEMENT_KEY]: '',
     [LEGAL_PRIVACY_POLICY_KEY]: '',
+    TopupAgreement: '',
     SystemName: '',
     Logo: '',
     Footer: '',
@@ -76,6 +77,7 @@ const OtherSetting = () => {
     Notice: false,
     [LEGAL_USER_AGREEMENT_KEY]: false,
     [LEGAL_PRIVACY_POLICY_KEY]: false,
+    TopupAgreement: false,
     SystemName: false,
     Logo: false,
     HomePageContent: false,
@@ -144,6 +146,25 @@ const OtherSetting = () => {
       setLoadingInput((loadingInput) => ({
         ...loadingInput,
         [LEGAL_PRIVACY_POLICY_KEY]: false,
+      }));
+    }
+  };
+  // 通用设置 - TopupAgreement
+  const submitTopupAgreement = async () => {
+    try {
+      setLoadingInput((loadingInput) => ({
+        ...loadingInput,
+        TopupAgreement: true,
+      }));
+      await updateOption('TopupAgreement', inputs.TopupAgreement);
+      showSuccess(t('充值协议已更新'));
+    } catch (error) {
+      console.error(t('充值协议更新失败'), error);
+      showError(t('充值协议更新失败'));
+    } finally {
+      setLoadingInput((loadingInput) => ({
+        ...loadingInput,
+        TopupAgreement: false,
       }));
     }
   };
@@ -412,6 +433,25 @@ const OtherSetting = () => {
                 loading={loadingInput[LEGAL_PRIVACY_POLICY_KEY]}
               >
                 {t('设置隐私政策')}
+              </Button>
+              <Form.TextArea
+                label={t('充值协议')}
+                placeholder={t(
+                  '在此输入充值协议内容，支持 Markdown & HTML 代码',
+                )}
+                field={'TopupAgreement'}
+                onChange={handleInputChange}
+                style={{ fontFamily: 'JetBrains Mono, Consolas' }}
+                autosize={{ minRows: 6, maxRows: 12 }}
+                helpText={t(
+                  '填写充值协议内容后，用户充值时将被要求勾选已阅读充值协议',
+                )}
+              />
+              <Button
+                onClick={submitTopupAgreement}
+                loading={loadingInput['TopupAgreement']}
+              >
+                {t('设置充值协议')}
               </Button>
             </Form.Section>
           </Card>

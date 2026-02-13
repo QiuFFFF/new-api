@@ -49,6 +49,7 @@ func AudioHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *type
 		return types.NewError(err, types.ErrorCodeDoRequestFailed)
 	}
 	statusCodeMappingStr := c.GetString("status_code_mapping")
+	errorMappingStr := c.GetString("error_mapping")
 
 	var httpResp *http.Response
 	if resp != nil {
@@ -57,6 +58,7 @@ func AudioHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *type
 			newAPIError = service.RelayErrorHandler(c.Request.Context(), httpResp, false)
 			// reset status code 重置状态码
 			service.ResetStatusCode(newAPIError, statusCodeMappingStr)
+			service.ApplyErrorMapping(newAPIError, errorMappingStr)
 			return newAPIError
 		}
 	}
@@ -65,6 +67,7 @@ func AudioHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *type
 	if newAPIError != nil {
 		// reset status code 重置状态码
 		service.ResetStatusCode(newAPIError, statusCodeMappingStr)
+		service.ApplyErrorMapping(newAPIError, errorMappingStr)
 		return newAPIError
 	}
 	if usage.(*dto.Usage).CompletionTokenDetails.AudioTokens > 0 || usage.(*dto.Usage).PromptTokensDetails.AudioTokens > 0 {

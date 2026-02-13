@@ -8,6 +8,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -186,6 +187,88 @@ func TaskErrorWrapperLocal(err error, code string, statusCode int) *dto.TaskErro
 	openaiErr := TaskErrorWrapper(err, code, statusCode)
 	openaiErr.LocalError = true
 	return openaiErr
+}
+
+type ErrorMappingPattern struct {
+	Match          string `json:"match"`
+	MatchType      string `json:"match_type"`
+	ReplaceMessage string `json:"replace_message"`
+	ReplaceType    string `json:"replace_type"`
+	ReplaceCode    string `json:"replace_code"`
+}
+
+type ErrorMappingConfig struct {
+	Patterns []ErrorMappingPattern `json:"patterns"`
+}
+
+func ApplyErrorMapping(newApiErr *types.NewAPIError, errorMappingStr string) {
+	if newApiErr == nil || errorMappingStr == "" || errorMappingStr == "{}" {
+		return
+	}
+	var config ErrorMappingConfig
+	if err := common.Unmarshal([]byte(errorMappingStr), &config); err != nil {
+		return
+	}
+	if len(config.Patterns) == 0 {
+		return
+	}
+	errMessage := newApiErr.Error()
+	errCode := string(newApiErr.GetErrorCode())
+	errType := string(newApiErr.GetErrorType())
+	for _, pattern := range config.Patterns {
+		if matchesPattern(pattern, errMessage, errCode, errType) {
+			applyReplacements(newApiErr, pattern)
+			break // first-match semantics
+		}
+	}
+}
+
+func matchesPattern(pattern ErrorMappingPattern, message, code, errType string) bool {
+	switch pattern.MatchType {
+	case "contains":
+		return strings.Contains(strings.ToLower(message), strings.ToLower(pattern.Match))
+	case "regex":
+		re, err := regexp.Compile(pattern.Match)
+		if err != nil {
+			return false
+		}
+		return re.MatchString(message)
+	case "exact_code":
+		return code == pattern.Match
+	case "exact_type":
+		return errType == pattern.Match
+	default:
+		return strings.Contains(strings.ToLower(message), strings.ToLower(pattern.Match))
+	}
+}
+
+func applyReplacements(newApiErr *types.NewAPIError, pattern ErrorMappingPattern) {
+	if pattern.ReplaceMessage != "" {
+		newApiErr.SetMessage(pattern.ReplaceMessage)
+	}
+	if newApiErr.RelayError != nil {
+		switch e := newApiErr.RelayError.(type) {
+		case types.OpenAIError:
+			if pattern.ReplaceMessage != "" {
+				e.Message = pattern.ReplaceMessage
+			}
+			if pattern.ReplaceType != "" {
+				e.Type = pattern.ReplaceType
+			}
+			if pattern.ReplaceCode != "" {
+				e.Code = pattern.ReplaceCode
+			}
+			newApiErr.RelayError = e
+		case types.ClaudeError:
+			if pattern.ReplaceMessage != "" {
+				e.Message = pattern.ReplaceMessage
+			}
+			if pattern.ReplaceType != "" {
+				e.Type = pattern.ReplaceType
+			}
+			newApiErr.RelayError = e
+		}
+	}
 }
 
 func TaskErrorWrapper(err error, code string, statusCode int) *dto.TaskError {

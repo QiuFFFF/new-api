@@ -34,6 +34,8 @@ import {
   Tooltip,
   Tabs,
   TabPane,
+  Checkbox,
+  Modal,
 } from '@douyinfe/semi-ui';
 import { SiAlipay, SiWechat, SiStripe } from 'react-icons/si';
 import {
@@ -49,6 +51,7 @@ import { IconGift } from '@douyinfe/semi-icons';
 import { useMinimumLoadingTime } from '../../hooks/common/useMinimumLoadingTime';
 import { getCurrencyConfig } from '../../helpers/render';
 import SubscriptionPlansCard from './SubscriptionPlansCard';
+import { marked } from 'marked';
 
 const { Text } = Typography;
 
@@ -94,12 +97,16 @@ const RechargeCard = ({
   activeSubscriptions = [],
   allSubscriptions = [],
   reloadSubscriptionSelf,
+  topupAgreement,
+  agreedToTopupAgreement,
+  setAgreedToTopupAgreement,
 }) => {
   const onlineFormApiRef = useRef(null);
   const redeemFormApiRef = useRef(null);
   const initialTabSetRef = useRef(false);
   const showAmountSkeleton = useMinimumLoadingTime(amountLoading);
   const [activeTab, setActiveTab] = useState('topup');
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
   const shouldShowSubscription =
     !subscriptionLoading && subscriptionPlans.length > 0;
 
@@ -550,6 +557,7 @@ const RechargeCard = ({
                   theme='solid'
                   onClick={topUp}
                   loading={isSubmitting}
+                  disabled={topupAgreement && !agreedToTopupAgreement}
                 >
                   {t('兑换额度')}
                 </Button>
@@ -574,11 +582,49 @@ const RechargeCard = ({
             }
           />
         </Form>
+        {topupAgreement && (
+          <div className='pt-3'>
+            <Checkbox
+              checked={agreedToTopupAgreement}
+              onChange={(e) => setAgreedToTopupAgreement(e.target.checked)}
+            >
+              <Text type='tertiary'>
+                {t('我已阅读并同意')}
+                <Text
+                  strong
+                  className='cursor-pointer mx-1'
+                  style={{ color: '#2563eb' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowAgreementModal(true);
+                  }}
+                >
+                  《{t('充值协议')}》
+                </Text>
+              </Text>
+            </Checkbox>
+          </div>
+        )}
       </Card>
     </Space>
   );
 
   return (
+    <>
+    <Modal
+      title={t('充值协议')}
+      visible={showAgreementModal}
+      onCancel={() => setShowAgreementModal(false)}
+      onOk={() => {
+        setAgreedToTopupAgreement(true);
+        setShowAgreementModal(false);
+      }}
+      okText={t('同意')}
+      cancelText={t('取消')}
+      centered
+    >
+      <div dangerouslySetInnerHTML={{ __html: marked.parse(topupAgreement || '') }} />
+    </Modal>
     <Card className='!rounded-2xl shadow-sm border-0'>
       {/* 卡片头部 */}
       <div className='flex items-center justify-between mb-4'>
@@ -628,6 +674,9 @@ const RechargeCard = ({
                 allSubscriptions={allSubscriptions}
                 reloadSubscriptionSelf={reloadSubscriptionSelf}
                 withCard={false}
+                topupAgreement={topupAgreement}
+                agreedToTopupAgreement={agreedToTopupAgreement}
+                setAgreedToTopupAgreement={setAgreedToTopupAgreement}
               />
             </div>
           </TabPane>
@@ -647,6 +696,7 @@ const RechargeCard = ({
         topupContent
       )}
     </Card>
+    </>
   );
 };
 

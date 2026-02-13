@@ -365,6 +365,49 @@ func GetAffCode(c *gin.Context) {
 	return
 }
 
+type UpdateAffCodeRequest struct {
+	AffCode string `json:"aff_code" binding:"required"`
+}
+
+func UpdateAffCode(c *gin.Context) {
+	var req UpdateAffCodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+
+	normalizedCode, err := model.ValidateAffCode(req.AffCode)
+	if err != nil {
+		switch err.Error() {
+		case "aff_code_invalid_length":
+			common.ApiErrorI18n(c, i18n.MsgUserAffCodeInvalidLength)
+		case "aff_code_invalid_chars":
+			common.ApiErrorI18n(c, i18n.MsgUserAffCodeInvalidChars)
+		default:
+			common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		}
+		return
+	}
+
+	userId := c.GetInt("id")
+	exists, err := model.IsAffCodeExists(normalizedCode, userId)
+	if err != nil {
+		common.ApiErrorI18n(c, i18n.MsgDatabaseError)
+		return
+	}
+	if exists {
+		common.ApiErrorI18n(c, i18n.MsgUserAffCodeAlreadyTaken)
+		return
+	}
+
+	if err := model.UpdateUserAffCode(userId, normalizedCode); err != nil {
+		common.ApiErrorI18n(c, i18n.MsgUpdateFailed)
+		return
+	}
+
+	common.ApiSuccessI18n(c, i18n.MsgUserAffCodeUpdateSuccess, normalizedCode)
+}
+
 func GetSelf(c *gin.Context) {
 	id := c.GetInt("id")
 	userRole := c.GetInt("role")
