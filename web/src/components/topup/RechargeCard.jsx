@@ -52,6 +52,7 @@ import { useMinimumLoadingTime } from '../../hooks/common/useMinimumLoadingTime'
 import { getCurrencyConfig } from '../../helpers/render';
 import SubscriptionPlansCard from './SubscriptionPlansCard';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 const { Text } = Typography;
 
@@ -623,7 +624,7 @@ const RechargeCard = ({
       cancelText={t('取消')}
       centered
     >
-      <div dangerouslySetInnerHTML={{ __html: marked.parse(topupAgreement || '') }} />
+      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(topupAgreement || '')) }} />
     </Modal>
     <Card className='!rounded-2xl shadow-sm border-0'>
       {/* 卡片头部 */}

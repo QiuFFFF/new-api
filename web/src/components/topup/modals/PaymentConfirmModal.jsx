@@ -22,6 +22,7 @@ import { Modal, Typography, Card, Skeleton, Checkbox } from '@douyinfe/semi-ui';
 import { SiAlipay, SiWechat, SiStripe } from 'react-icons/si';
 import { CreditCard } from 'lucide-react';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 const { Text } = Typography;
 
@@ -64,7 +65,7 @@ const PaymentConfirmModal = ({
       cancelText={t('取消')}
       centered
     >
-      <div dangerouslySetInnerHTML={{ __html: marked.parse(topupAgreement || '') }} />
+      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(topupAgreement || '')) }} />
     </Modal>
     <Modal
       title={

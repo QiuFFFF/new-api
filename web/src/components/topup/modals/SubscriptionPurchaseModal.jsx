@@ -39,6 +39,7 @@ import {
   formatSubscriptionResetPeriod,
 } from '../../../helpers/subscriptionFormat';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 const { Text } = Typography;
 
@@ -95,7 +96,7 @@ const SubscriptionPurchaseModal = ({
       cancelText={t('取消')}
       centered
     >
-      <div dangerouslySetInnerHTML={{ __html: marked.parse(topupAgreement || '') }} />
+      <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(topupAgreement || '')) }} />
     </Modal>
     <Modal
       title={
