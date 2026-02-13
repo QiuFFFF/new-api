@@ -36,6 +36,7 @@ import { StatusContext } from '../../context/Status';
 import RechargeCard from './RechargeCard';
 import InvitationCard from './InvitationCard';
 import TransferModal from './modals/TransferModal';
+import EditAffCodeModal from './modals/EditAffCodeModal';
 import PaymentConfirmModal from './modals/PaymentConfirmModal';
 import TopupHistoryModal from './modals/TopupHistoryModal';
 
@@ -83,6 +84,8 @@ const TopUp = () => {
   const [affLink, setAffLink] = useState('');
   const [openTransfer, setOpenTransfer] = useState(false);
   const [transferAmount, setTransferAmount] = useState(0);
+  const [openEditAffCode, setOpenEditAffCode] = useState(false);
+  const [editAffCodeLoading, setEditAffCodeLoading] = useState(false);
 
   // 账单Modal状态
   const [openHistory, setOpenHistory] = useState(false);
@@ -98,6 +101,10 @@ const TopUp = () => {
   // 预设充值额度选项
   const [presetAmounts, setPresetAmounts] = useState([]);
   const [selectedPreset, setSelectedPreset] = useState(null);
+
+  // 充值协议
+  const topupAgreement = statusState?.status?.topup_agreement || '';
+  const [agreedToTopupAgreement, setAgreedToTopupAgreement] = useState(false);
 
   // 充值配置信息
   const [topupInfo, setTopupInfo] = useState({
@@ -531,6 +538,27 @@ const TopUp = () => {
     showSuccess(t('邀请链接已复制到剪切板'));
   };
 
+  // 更新邀请码
+  const updateAffCode = async (code) => {
+    setEditAffCodeLoading(true);
+    try {
+      const res = await API.put('/api/user/aff', { aff_code: code });
+      const { success, message, data } = res.data;
+      if (success) {
+        let link = `${window.location.origin}/register?aff=${data}`;
+        setAffLink(link);
+        setOpenEditAffCode(false);
+        showSuccess(t('邀请码更新成功'));
+      } else {
+        showError(message);
+      }
+    } catch (err) {
+      showError(t('请求失败'));
+    } finally {
+      setEditAffCodeLoading(false);
+    }
+  };
+
   useEffect(() => {
     // 始终获取最新用户数据，确保余额等统计信息准确
     getUserQuota().then();
@@ -679,6 +707,15 @@ const TopUp = () => {
         setTransferAmount={setTransferAmount}
       />
 
+      {/* 编辑邀请码模态框 */}
+      <EditAffCodeModal
+        t={t}
+        visible={openEditAffCode}
+        onOk={updateAffCode}
+        onCancel={() => setOpenEditAffCode(false)}
+        confirmLoading={editAffCodeLoading}
+      />
+
       {/* 充值确认模态框 */}
       <PaymentConfirmModal
         t={t}
@@ -694,6 +731,9 @@ const TopUp = () => {
         payMethods={payMethods}
         amountNumber={amount}
         discountRate={topupInfo?.discount?.[topUpCount] || 1.0}
+        topupAgreement={topupAgreement}
+        agreedToTopupAgreement={agreedToTopupAgreement}
+        setAgreedToTopupAgreement={setAgreedToTopupAgreement}
       />
 
       {/* 充值账单模态框 */}
@@ -775,6 +815,9 @@ const TopUp = () => {
           activeSubscriptions={activeSubscriptions}
           allSubscriptions={allSubscriptions}
           reloadSubscriptionSelf={getSubscriptionSelf}
+          topupAgreement={topupAgreement}
+          agreedToTopupAgreement={agreedToTopupAgreement}
+          setAgreedToTopupAgreement={setAgreedToTopupAgreement}
         />
         <InvitationCard
           t={t}
@@ -783,6 +826,8 @@ const TopUp = () => {
           setOpenTransfer={setOpenTransfer}
           affLink={affLink}
           handleAffLinkClick={handleAffLinkClick}
+          onEditAffCode={() => setOpenEditAffCode(true)}
+          inviteRewardDescription={statusState?.status?.invite_reward_description}
         />
       </div>
     </div>

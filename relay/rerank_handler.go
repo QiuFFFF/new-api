@@ -79,6 +79,7 @@ func RerankHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *typ
 	}
 
 	statusCodeMappingStr := c.GetString("status_code_mapping")
+	errorMappingStr := c.GetString("error_mapping")
 	var httpResp *http.Response
 	if resp != nil {
 		httpResp = resp.(*http.Response)
@@ -86,6 +87,7 @@ func RerankHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *typ
 			newAPIError = service.RelayErrorHandler(c.Request.Context(), httpResp, false)
 			// reset status code 重置状态码
 			service.ResetStatusCode(newAPIError, statusCodeMappingStr)
+			service.ApplyErrorMapping(newAPIError, errorMappingStr)
 			return newAPIError
 		}
 	}
@@ -94,6 +96,7 @@ func RerankHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *typ
 	if newAPIError != nil {
 		// reset status code 重置状态码
 		service.ResetStatusCode(newAPIError, statusCodeMappingStr)
+		service.ApplyErrorMapping(newAPIError, errorMappingStr)
 		return newAPIError
 	}
 	postConsumeQuota(c, info, usage.(*dto.Usage))

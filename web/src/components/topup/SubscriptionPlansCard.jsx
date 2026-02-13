@@ -83,6 +83,9 @@ const SubscriptionPlansCard = ({
   allSubscriptions = [],
   reloadSubscriptionSelf,
   withCard = true,
+  topupAgreement,
+  agreedToTopupAgreement,
+  setAgreedToTopupAgreement,
 }) => {
   const [open, setOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -676,6 +679,9 @@ const SubscriptionPlansCard = ({
         onPayStripe={payStripe}
         onPayCreem={payCreem}
         onPayEpay={payEpay}
+        topupAgreement={topupAgreement}
+        agreedToTopupAgreement={agreedToTopupAgreement}
+        setAgreedToTopupAgreement={setAgreedToTopupAgreement}
       />
     </>
   );
