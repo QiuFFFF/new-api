@@ -328,7 +328,8 @@ func ValidateAffCode(code string) (string, error) {
 // IsAffCodeExists checks if the affiliate code is already used by another user
 func IsAffCodeExists(affCode string, excludeUserId int) (bool, error) {
 	var count int64
-	err := DB.Model(&User{}).Where("aff_code = ? AND id != ?", affCode, excludeUserId).Count(&count).Error
+	normalizedCode := strings.ToUpper(affCode)
+	err := DB.Model(&User{}).Where("UPPER(aff_code) = ? AND id != ?", normalizedCode, excludeUserId).Count(&count).Error
 	return count > 0, err
 }
 
@@ -336,6 +337,9 @@ func IsAffCodeExists(affCode string, excludeUserId int) (bool, error) {
 func UpdateUserAffCode(userId int, affCode string) error {
 	result := DB.Model(&User{}).Where("id = ?", userId).Update("aff_code", affCode)
 	if result.Error != nil {
+		if strings.Contains(result.Error.Error(), "UNIQUE") || strings.Contains(result.Error.Error(), "duplicate") || strings.Contains(result.Error.Error(), "Duplicate") {
+			return errors.New("aff_code_already_taken")
+		}
 		return result.Error
 	}
 	if result.RowsAffected == 0 {

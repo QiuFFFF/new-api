@@ -123,7 +123,8 @@ const ErrorMappingEditor = ({
       }
     }
     setJsonError('');
-  }, [value]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, parsePatterns]);
 
   useEffect(() => {
     if (editMode !== 'manual') {
