@@ -56,6 +56,7 @@ export default function GeneralSettings(props) {
     DefaultCollapseSidebar: false,
     DemoSiteEnabled: false,
     SelfUseModeEnabled: false,
+    CCSwitchEnabled: false,
     'token_setting.max_user_tokens': 1000,
   });
   const refForm = useRef();
@@ -285,6 +286,17 @@ export default function GeneralSettings(props) {
                   checkedText='｜'
                   uncheckedText='〇'
                   onChange={handleFieldChange('SelfUseModeEnabled')}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.Switch
+                  field={'CCSwitchEnabled'}
+                  label={t('CC Switch 导入')}
+                  extraText={t('开启后令牌管理页面显示 CCS 一键导入按钮')}
+                  size='default'
+                  checkedText='｜'
+                  uncheckedText='〇'
+                  onChange={handleFieldChange('CCSwitchEnabled')}
                 />
               </Col>
             </Row>

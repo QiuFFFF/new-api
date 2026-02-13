@@ -49,6 +49,9 @@ const TokensTable = (tokensData) => {
     t,
   } = tokensData;
 
+  const enableCCSwitch =
+    localStorage.getItem('enable_ccswitch') === 'true';
+
   // Get all columns
   const columns = useMemo(() => {
     return getTokensColumns({
@@ -61,6 +64,7 @@ const TokensTable = (tokensData) => {
       setEditingToken,
       setShowEdit,
       refresh,
+      enableCCSwitch,
     });
   }, [
     t,
@@ -72,6 +76,7 @@ const TokensTable = (tokensData) => {
     setEditingToken,
     setShowEdit,
     refresh,
+    enableCCSwitch,
   ]);
 
   // Handle compact mode by removing fixed positioning

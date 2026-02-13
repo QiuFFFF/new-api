@@ -32,7 +32,9 @@ import {
   Typography,
   Input,
   Modal,
+  Toast,
 } from '@douyinfe/semi-ui';
+import { generateCCSwitchLink } from '../../../helpers/ccswitch';
 import {
   timestamp2string,
   renderGroup,
@@ -306,6 +308,13 @@ const renderQuotaUsage = (text, record, t) => {
   );
 };
 
+// Handle CC Switch export
+const handleCCSwitchExport = (app, record) => {
+  const fullKey = 'sk-' + record.key;
+  const url = generateCCSwitchLink(app, record.name, fullKey);
+  window.location.href = url;
+};
+
 // Render operations column
 const renderOperations = (
   text,
@@ -316,6 +325,8 @@ const renderOperations = (
   manageToken,
   refresh,
   t,
+  copyText,
+  enableCCSwitch,
 ) => {
   let chatsArray = [];
   try {
@@ -367,6 +378,37 @@ const renderOperations = (
           ></Button>
         </Dropdown>
       </SplitButtonGroup>
+
+      {enableCCSwitch && (
+        <Dropdown
+          trigger='click'
+          position='bottomRight'
+          menu={[
+            {
+              node: 'item',
+              name: 'Claude',
+              onClick: () =>
+                handleCCSwitchExport('claude', record),
+            },
+            {
+              node: 'item',
+              name: 'Codex',
+              onClick: () =>
+                handleCCSwitchExport('codex', record),
+            },
+            {
+              node: 'item',
+              name: 'Gemini',
+              onClick: () =>
+                handleCCSwitchExport('gemini', record),
+            },
+          ]}
+        >
+          <Button size='small' type='tertiary'>
+            CCS
+          </Button>
+        </Dropdown>
+      )}
 
       {record.status === 1 ? (
         <Button
@@ -434,6 +476,7 @@ export const getTokensColumns = ({
   setEditingToken,
   setShowEdit,
   refresh,
+  enableCCSwitch,
 }) => {
   return [
     {
@@ -505,6 +548,8 @@ export const getTokensColumns = ({
           manageToken,
           refresh,
           t,
+          copyText,
+          enableCCSwitch,
         ),
     },
   ];
