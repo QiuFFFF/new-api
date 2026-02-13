@@ -312,6 +312,38 @@ func GetUserIdByAffCode(affCode string) (int, error) {
 	return user.Id, err
 }
 
+// ValidateAffCode validates affiliate code format: 4 chars, alphanumeric only, returns uppercase
+func ValidateAffCode(code string) (string, error) {
+	if len(code) != 4 {
+		return "", errors.New("aff_code_invalid_length")
+	}
+	for _, c := range code {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+			return "", errors.New("aff_code_invalid_chars")
+		}
+	}
+	return strings.ToUpper(code), nil
+}
+
+// IsAffCodeExists checks if the affiliate code is already used by another user
+func IsAffCodeExists(affCode string, excludeUserId int) (bool, error) {
+	var count int64
+	err := DB.Model(&User{}).Where("aff_code = ? AND id != ?", affCode, excludeUserId).Count(&count).Error
+	return count > 0, err
+}
+
+// UpdateUserAffCode updates a user's affiliate code
+func UpdateUserAffCode(userId int, affCode string) error {
+	result := DB.Model(&User{}).Where("id = ?", userId).Update("aff_code", affCode)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("user not found")
+	}
+	return nil
+}
+
 func DeleteUserById(id int) (err error) {
 	if id == 0 {
 		return errors.New("id 为空！")

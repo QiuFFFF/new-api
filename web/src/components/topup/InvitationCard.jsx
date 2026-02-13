@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Avatar,
   Typography,
@@ -27,7 +27,7 @@ import {
   Badge,
   Space,
 } from '@douyinfe/semi-ui';
-import { Copy, Users, BarChart2, TrendingUp, Gift, Zap } from 'lucide-react';
+import { Copy, Users, BarChart2, TrendingUp, Gift, Zap, Edit3 } from 'lucide-react';
 
 const { Text } = Typography;
 
@@ -38,7 +38,14 @@ const InvitationCard = ({
   setOpenTransfer,
   affLink,
   handleAffLinkClick,
+  onEditAffCode,
+  inviteRewardDescription,
 }) => {
+  const customDescriptionLines = useMemo(() => {
+    if (!inviteRewardDescription) return null;
+    return inviteRewardDescription.split('\n').filter((line) => line.trim() !== '');
+  }, [inviteRewardDescription]);
+
   return (
     <Card className='!rounded-2xl shadow-sm border-0'>
       {/* 卡片头部 */}
@@ -174,23 +181,28 @@ const InvitationCard = ({
           }
         >
           {/* 邀请链接部分 */}
-          <Input
-            value={affLink}
-            readonly
-            className='!rounded-lg'
-            prefix={t('邀请链接')}
-            suffix={
-              <Button
-                type='primary'
-                theme='solid'
-                onClick={handleAffLinkClick}
-                icon={<Copy size={14} />}
-                className='!rounded-lg'
-              >
-                {t('复制')}
-              </Button>
-            }
-          />
+          <div className='flex gap-2 items-center'>
+            <Input
+              value={affLink}
+              readonly
+              className='!rounded-lg flex-1'
+              prefix={t('邀请链接')}
+            />
+            <Button
+              type='tertiary'
+              theme='light'
+              onClick={onEditAffCode}
+              icon={<Edit3 size={14} />}
+              className='!rounded-lg'
+            />
+            <Button
+              type='primary'
+              theme='solid'
+              onClick={handleAffLinkClick}
+              icon={<Copy size={14} />}
+              className='!rounded-lg'
+            />
+          </div>
         </Card>
 
         {/* 奖励说明 */}
@@ -199,26 +211,39 @@ const InvitationCard = ({
           title={<Text type='tertiary'>{t('奖励说明')}</Text>}
         >
           <div className='space-y-3'>
-            <div className='flex items-start gap-2'>
-              <Badge dot type='success' />
-              <Text type='tertiary' className='text-sm'>
-                {t('邀请好友注册，好友充值后您可获得相应奖励')}
-              </Text>
-            </div>
+            {customDescriptionLines ? (
+              customDescriptionLines.map((line, index) => (
+                <div key={index} className='flex items-start gap-2'>
+                  <Badge dot type='success' />
+                  <Text type='tertiary' className='text-sm'>
+                    {line}
+                  </Text>
+                </div>
+              ))
+            ) : (
+              <>
+                <div className='flex items-start gap-2'>
+                  <Badge dot type='success' />
+                  <Text type='tertiary' className='text-sm'>
+                    {t('邀请好友注册，好友充值后您可获得相应奖励')}
+                  </Text>
+                </div>
 
-            <div className='flex items-start gap-2'>
-              <Badge dot type='success' />
-              <Text type='tertiary' className='text-sm'>
-                {t('通过划转功能将奖励额度转入到您的账户余额中')}
-              </Text>
-            </div>
+                <div className='flex items-start gap-2'>
+                  <Badge dot type='success' />
+                  <Text type='tertiary' className='text-sm'>
+                    {t('通过划转功能将奖励额度转入到您的账户余额中')}
+                  </Text>
+                </div>
 
-            <div className='flex items-start gap-2'>
-              <Badge dot type='success' />
-              <Text type='tertiary' className='text-sm'>
-                {t('邀请的好友越多，获得的奖励越多')}
-              </Text>
-            </div>
+                <div className='flex items-start gap-2'>
+                  <Badge dot type='success' />
+                  <Text type='tertiary' className='text-sm'>
+                    {t('邀请的好友越多，获得的奖励越多')}
+                  </Text>
+                </div>
+              </>
+            )}
           </div>
         </Card>
       </Space>

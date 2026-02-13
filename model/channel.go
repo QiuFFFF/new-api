@@ -40,6 +40,7 @@ type Channel struct {
 	ModelMapping       *string `json:"model_mapping" gorm:"type:text"`
 	//MaxInputTokens     *int    `json:"max_input_tokens" gorm:"default:0"`
 	StatusCodeMapping *string `json:"status_code_mapping" gorm:"type:varchar(1024);default:''"`
+	ErrorMapping      *string `json:"error_mapping" gorm:"type:text"`
 	Priority          *int64  `json:"priority" gorm:"bigint;default:0"`
 	AutoBan           *int    `json:"auto_ban" gorm:"default:1"`
 	OtherInfo         string  `json:"other_info"`
@@ -443,6 +444,13 @@ func (channel *Channel) GetStatusCodeMapping() string {
 		return ""
 	}
 	return *channel.StatusCodeMapping
+}
+
+func (channel *Channel) GetErrorMapping() string {
+	if channel.ErrorMapping == nil {
+		return ""
+	}
+	return *channel.ErrorMapping
 }
 
 func (channel *Channel) Insert() error {

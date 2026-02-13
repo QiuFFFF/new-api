@@ -17,10 +17,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React from 'react';
-import { Modal, Typography, Card, Skeleton } from '@douyinfe/semi-ui';
+import React, { useState } from 'react';
+import { Modal, Typography, Card, Skeleton, Checkbox } from '@douyinfe/semi-ui';
 import { SiAlipay, SiWechat, SiStripe } from 'react-icons/si';
 import { CreditCard } from 'lucide-react';
+import { marked } from 'marked';
 
 const { Text } = Typography;
 
@@ -39,12 +40,32 @@ const PaymentConfirmModal = ({
   // 新增：用于显示折扣明细
   amountNumber,
   discountRate,
+  // 充值协议
+  topupAgreement,
+  agreedToTopupAgreement,
+  setAgreedToTopupAgreement,
 }) => {
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
   const hasDiscount =
     discountRate && discountRate > 0 && discountRate < 1 && amountNumber > 0;
   const originalAmount = hasDiscount ? amountNumber / discountRate : 0;
   const discountAmount = hasDiscount ? originalAmount - amountNumber : 0;
   return (
+    <>
+    <Modal
+      title={t('充值协议')}
+      visible={showAgreementModal}
+      onCancel={() => setShowAgreementModal(false)}
+      onOk={() => {
+        setAgreedToTopupAgreement(true);
+        setShowAgreementModal(false);
+      }}
+      okText={t('同意')}
+      cancelText={t('取消')}
+      centered
+    >
+      <div dangerouslySetInnerHTML={{ __html: marked.parse(topupAgreement || '') }} />
+    </Modal>
     <Modal
       title={
         <div className='flex items-center'>
@@ -59,6 +80,7 @@ const PaymentConfirmModal = ({
       size='small'
       centered
       confirmLoading={confirmLoading}
+      okButtonProps={{ disabled: topupAgreement && !agreedToTopupAgreement }}
     >
       <div className='space-y-4'>
         <Card className='!rounded-xl !border-0 bg-slate-50 dark:bg-slate-800'>
@@ -202,8 +224,32 @@ const PaymentConfirmModal = ({
             </div>
           </div>
         </Card>
+        {topupAgreement && (
+          <div className='pt-1'>
+            <Checkbox
+              checked={agreedToTopupAgreement}
+              onChange={(e) => setAgreedToTopupAgreement(e.target.checked)}
+            >
+              <Text type='tertiary'>
+                {t('我已阅读并同意')}
+                <Text
+                  strong
+                  className='cursor-pointer mx-1'
+                  style={{ color: '#2563eb' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowAgreementModal(true);
+                  }}
+                >
+                  《{t('充值协议')}》
+                </Text>
+              </Text>
+            </Checkbox>
+          </div>
+        )}
       </div>
     </Modal>
+    </>
   );
 };
 
