@@ -63,6 +63,7 @@ export default function SettingsSidebarModulesAdmin(props) {
       channel: true,
       models: true,
       deployment: true,
+      'group-monitoring': true,
       redemption: true,
       user: true,
       subscription: true,
@@ -260,6 +261,7 @@ export default function SettingsSidebarModulesAdmin(props) {
           title: t('模型部署'),
           description: t('模型部署管理'),
         },
+        { key: 'group-monitoring', title: t('分组监控'), description: t('分组可用率监控') },
         {
           key: 'subscription',
           title: t('订阅管理'),

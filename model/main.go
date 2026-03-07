@@ -213,6 +213,15 @@ func InitDB() (err error) {
 func InitLogDB() (err error) {
 	if os.Getenv("LOG_SQL_DSN") == "" {
 		LOG_DB = DB
+		// Sync LogSqlType with the main DB type
+		switch {
+		case common.UsingPostgreSQL:
+			common.LogSqlType = common.DatabaseTypePostgreSQL
+		case common.UsingMySQL:
+			common.LogSqlType = common.DatabaseTypeMySQL
+		default:
+			common.LogSqlType = common.DatabaseTypeSQLite
+		}
 		return
 	}
 	db, err := chooseDB("LOG_SQL_DSN", true)
@@ -280,6 +289,10 @@ func migrateDB() error {
 		&SubscriptionPreConsumeRecord{},
 		&CustomOAuthProvider{},
 		&UserOAuthBinding{},
+		&RequestStat{},
+		&ChannelMonitoringStat{},
+		&GroupMonitoringStat{},
+		&MonitoringHistory{},
 	)
 	if err != nil {
 		return err
@@ -328,6 +341,10 @@ func migrateDBFast() error {
 		{&SubscriptionPreConsumeRecord{}, "SubscriptionPreConsumeRecord"},
 		{&CustomOAuthProvider{}, "CustomOAuthProvider"},
 		{&UserOAuthBinding{}, "UserOAuthBinding"},
+		{&RequestStat{}, "RequestStat"},
+		{&ChannelMonitoringStat{}, "ChannelMonitoringStat"},
+		{&GroupMonitoringStat{}, "GroupMonitoringStat"},
+		{&MonitoringHistory{}, "MonitoringHistory"},
 	}
 	// 动态计算migration数量，确保errChan缓冲区足够大
 	errChan := make(chan error, len(migrations))

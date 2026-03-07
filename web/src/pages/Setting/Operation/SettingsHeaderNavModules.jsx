@@ -48,6 +48,7 @@ export default function SettingsHeaderNavModules(props) {
     },
     docs: true,
     about: true,
+    monitoring: true,
   });
 
   // 处理顶栏模块配置变更
@@ -187,6 +188,11 @@ export default function SettingsHeaderNavModules(props) {
       key: 'about',
       title: t('关于'),
       description: t('关于系统的详细信息'),
+    },
+    {
+      key: 'monitoring',
+      title: t('分组监控'),
+      description: t('分组可用率监控页面'),
     },
   ];
 

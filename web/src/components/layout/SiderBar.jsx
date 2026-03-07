@@ -48,6 +48,7 @@ const routerMap = {
   models: '/console/models',
   deployment: '/console/deployment',
   playground: '/console/playground',
+  'group-monitoring': '/console/group-monitoring',
   personal: '/console/personal',
 };
 
@@ -169,6 +170,12 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         text: t('模型部署'),
         itemKey: 'deployment',
         to: '/deployment',
+        className: isAdmin() ? '' : 'tableHiddle',
+      },
+      {
+        text: t('分组监控'),
+        itemKey: 'group-monitoring',
+        to: '/group-monitoring',
         className: isAdmin() ? '' : 'tableHiddle',
       },
       {

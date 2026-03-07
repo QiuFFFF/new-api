@@ -368,5 +368,22 @@ func SetApiRouter(router *gin.Engine) {
 			deploymentsRoute.POST("/:id/extend", controller.ExtendDeployment)
 			deploymentsRoute.DELETE("/:id", controller.DeleteDeployment)
 		}
+
+		// Group monitoring routes
+		monitoringAdminRoute := apiRouter.Group("/monitoring/admin")
+		monitoringAdminRoute.Use(middleware.AdminAuth())
+		{
+			monitoringAdminRoute.GET("/groups", controller.GetAdminMonitoringGroups)
+			monitoringAdminRoute.GET("/groups/:group", controller.GetAdminMonitoringGroupDetail)
+			monitoringAdminRoute.GET("/groups/:group/history", controller.GetAdminMonitoringGroupHistory)
+			monitoringAdminRoute.POST("/refresh", middleware.CriticalRateLimit(), controller.RefreshMonitoringData)
+			monitoringAdminRoute.DELETE("/groups/:group/records", controller.DeleteMonitoringGroupRecords)
+		}
+		monitoringPublicRoute := apiRouter.Group("/monitoring/public")
+		monitoringPublicRoute.Use(middleware.TryUserAuth())
+		{
+			monitoringPublicRoute.GET("/groups", controller.GetPublicMonitoringGroups)
+			monitoringPublicRoute.GET("/groups/:group/history", controller.GetPublicMonitoringGroupHistory)
+		}
 	}
 }

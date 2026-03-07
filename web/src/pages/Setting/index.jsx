@@ -34,6 +34,7 @@ import {
   CreditCard,
   Server,
   Activity,
+  MonitorCheck,
 } from 'lucide-react';
 
 import SystemSetting from '../../components/settings/SystemSetting';
@@ -49,6 +50,7 @@ import DrawingSetting from '../../components/settings/DrawingSetting';
 import PaymentSetting from '../../components/settings/PaymentSetting';
 import ModelDeploymentSetting from '../../components/settings/ModelDeploymentSetting';
 import PerformanceSetting from '../../components/settings/PerformanceSetting';
+import GroupMonitoringSetting from '../../components/settings/GroupMonitoringSetting';
 
 const Setting = () => {
   const { t } = useTranslation();
@@ -157,6 +159,16 @@ const Setting = () => {
       ),
       content: <PerformanceSetting />,
       itemKey: 'performance',
+    });
+    panes.push({
+      tab: (
+        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <MonitorCheck size={18} />
+          {t('分组监控')}
+        </span>
+      ),
+      content: <GroupMonitoringSetting />,
+      itemKey: 'group-monitoring',
     });
     panes.push({
       tab: (

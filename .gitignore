@@ -28,3 +28,7 @@ data/
 .gomodcache/
 .gocache-temp
 .gopath
+
+# Database backup dumps
+*.dump
+*.sql
