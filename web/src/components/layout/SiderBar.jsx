@@ -49,6 +49,7 @@ const routerMap = {
   deployment: '/console/deployment',
   playground: '/console/playground',
   personal: '/console/personal',
+  'group-monitoring': '/console/group-monitoring',
 };
 
 const SiderBar = ({ onNavigate = () => {} }) => {
@@ -104,6 +105,11 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         to: '/task',
         className:
           localStorage.getItem('enable_task') === 'true' ? '' : 'tableHiddle',
+      },
+      {
+        text: t('分组监控'),
+        itemKey: 'group-monitoring',
+        to: '/group-monitoring',
       },
     ];
 

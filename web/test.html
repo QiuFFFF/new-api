@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Group Monitoring - Status Page Design</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #f8f9fb;
+    --bg-card: #ffffff;
+    --bg-card-hover: #fafbfc;
+    --bg-progress: #e8ecf1;
+    --bg-header: #ffffff;
+    --bg-badge: #f0f5f0;
+    --text-primary: #1a1d23;
+    --text-secondary: #5c6370;
+    --text-tertiary: #8b95a5;
+    --text-value: #2d3239;
+    --border-color: #e5e8ed;
+    --border-card: #e8ecf1;
+    --green: #22c55e;
+    --green-bg: #dcfce7;
+    --green-text: #166534;
+    --red: #ef4444;
+    --red-bg: #fee2e2;
+    --red-text: #991b1b;
+    --yellow: #f59e0b;
+    --yellow-bg: #fef3c7;
+    --yellow-text: #92400e;
+    --blue: #3b82f6;
+    --blue-bg: #dbeafe;
+    --blue-text: #1e40af;
+    --avail-color: #3b82f6;
+    --cache-color: #22c55e;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-xs: 6px;
+  }
+
+  [data-theme="dark"] {
+    --bg-primary: #0f1117;
+    --bg-card: #1a1d27;
+    --bg-card-hover: #1e2230;
+    --bg-progress: #2a2e3a;
+    --bg-header: #1a1d27;
+    --bg-badge: #1a2e1a;
+    --text-primary: #e4e7ed;
+    --text-secondary: #9aa0ae;
+    --text-tertiary: #6b7280;
+    --text-value: #d1d5db;
+    --border-color: #2a2e3a;
+    --border-card: #2a2e3a;
+    --green-bg: #052e16;
+    --green-text: #86efac;
+    --red-bg: #450a0a;
+    --red-text: #fca5a5;
+    --yellow-bg: #451a03;
+    --yellow-text: #fcd34d;
+    --blue-bg: #172554;
+    --blue-text: #93c5fd;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
+
+  /* ── Header ── */
+  .page-header {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .header-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .period-selector {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-progress);
+    border-radius: var(--radius-xs);
+    padding: 3px;
+  }
+
+  .period-btn {
+    padding: 5px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .period-btn.active {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  .period-btn:hover:not(.active) {
+    color: var(--text-primary);
+  }
+
+  .header-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .meta-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .stat-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .stat-dot .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .stat-dot .dot.green { background: var(--green); }
+  .stat-dot .dot.red { background: var(--red); }
+
+  .meta-divider {
+    width: 1px;
+    height: 16px;
+    background: var(--border-color);
+  }
+
+  .overall-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .overall-status.operational {
+    background: var(--green-bg);
+    color: var(--green-text);
+  }
+
+  .overall-status.degraded {
+    background: var(--yellow-bg);
+    color: var(--yellow-text);
+  }
+
+  .overall-status.down {
+    background: var(--red-bg);
+    color: var(--red-text);
+  }
+
+  .meta-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .meta-text {
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+
+  .refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .refresh-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--text-secondary);
+  }
+
+  /* ── Card Grid ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 1024px) {
+    .card-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 640px) {
+    .card-grid { grid-template-columns: 1fr; }
+    .header-top { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .meta-right { margin-left: 0; }
+  }
+
+  /* ── Status Card ── */
+  .status-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow-card);
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .status-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+    background: var(--bg-card-hover);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .card-title {
+    font-size: 15px;
+    font-weight: 650;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 70%;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+  }
+
+  .status-badge.online {
+    background: var(--green-bg);
+    color: var(--green-text);
+  }
+
+  .status-badge.offline {
+    background: var(--red-bg);
+    color: var(--red-text);
+  }
+
+  .status-badge .badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .status-badge.online .badge-dot { background: var(--green); }
+  .status-badge.offline .badge-dot { background: var(--red); }
+
+  .card-subtitle {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Metrics Row ── */
+  .metrics-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 16px;
+    padding: 8px 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .metric-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .metric-item + .metric-item {
+    border-left: 1px solid var(--border-color);
+  }
+
+  .metric-icon {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .metric-value {
+    font-size: 15px;
+    font-weight: 650;
+    color: var(--text-value);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Progress Bars ── */
+  .progress-section {
+    margin-bottom: 12px;
+  }
+
+  .progress-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+
+  .progress-label-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .progress-label-value {
+    font-size: 13px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--bg-progress);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+
+  .progress-fill.avail { background: var(--avail-color); }
+  .progress-fill.cache { background: var(--cache-color); }
+
+  /* progress color based on rate */
+  .rate-excellent { color: var(--green); }
+  .rate-good { color: #65a30d; }
+  .rate-warning { color: var(--yellow); }
+  .rate-critical { color: var(--red); }
+  .rate-na { color: var(--text-tertiary); }
+
+  .progress-fill.rate-excellent { background: var(--green); }
+  .progress-fill.rate-good { background: #65a30d; }
+  .progress-fill.rate-warning { background: var(--yellow); }
+  .progress-fill.rate-critical { background: var(--red); }
+
+  /* ── Mini Chart ── */
+  .chart-section {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .chart-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  .legend-dot.avail { background: var(--avail-color); }
+  .legend-dot.cache { background: var(--cache-color); }
+
+  .chart-container {
+    position: relative;
+    height: 80px;
+  }
+
+  .chart-no-data {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+
+  .chart-time-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+
+  .chart-time-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+
+  /* ── Footer ── */
+  .page-footer {
+    text-align: center;
+    margin-top: 24px;
+    padding: 16px 0;
+    font-size: 12px;
+    color: var(--text-tertiary);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-top">
+      <div class="header-title">GROUP MONITORING</div>
+    </div>
+    <div class="header-meta">
+      <div class="meta-stats">
+        <span class="stat-dot"><span class="dot green"></span><span id="onlineCount">5</span> 正常</span>
+        <span class="stat-dot"><span class="dot red"></span><span id="offlineCount">1</span> 异常</span>
+        <span class="meta-divider"></span>
+        <span class="stat-dot" style="color:var(--text-tertiary)"><span id="totalCount">6</span> 个分组</span>
+      </div>
+      <div class="meta-right">
+        <span class="meta-text" id="updatedAt">更新于 2 分钟前 · 5 分钟轮询</span>
+        <button class="refresh-btn" onclick="handleRefresh()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          刷新
+        </button>
+        <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">🌓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Grid -->
+  <div class="card-grid" id="cardGrid"></div>
+
+  <!-- Footer -->
+  <div class="page-footer">Design Preview — 分组监控 Status Page</div>
+</div>
+
+<script>
+// ── Mock Data ──
+const mockGroups = [
+  {
+    group_name: 'OpenAI GPT-4o',
+    last_test_model: 'gpt-4o-2024-08-06',
+    is_online: true,
+    availability_rate: 99.72,
+    cache_hit_rate: 87.3,
+    avg_frt: 245,
+    group_ratio: 0.80,
+    updated_at: Math.floor(Date.now()/1000) - 120,
+    history: generateHistory(99, 85, 0.5, 5),
+  },
+  {
+    group_name: 'Claude Sonnet 4',
+    last_test_model: 'claude-sonnet-4-20250514',
+    is_online: true,
+    availability_rate: 98.15,
+    cache_hit_rate: 92.1,
+    avg_frt: 180,
+    group_ratio: 1.20,
+    updated_at: Math.floor(Date.now()/1000) - 120,
+    history: generateHistory(98, 92, 1, 3),
+  },
+  {
+    group_name: 'Gemini 2.5 Pro',
+    last_test_model: 'gemini-2.5-pro-preview-06-05',
+    is_online: true,
+    availability_rate: 99.95,
+    cache_hit_rate: 78.6,
+    avg_frt: 320,
+    group_ratio: 0.95,
+    updated_at: Math.floor(Date.now()/1000) - 120,
+    history: generateHistory(99.5, 78, 0.3, 8),
+  },
+  {
+    group_name: 'DeepSeek V3',
+    last_test_model: 'deepseek-chat',
+    is_online: true,
+    availability_rate: 95.40,
+    cache_hit_rate: 65.2,
+    avg_frt: 410,
+    group_ratio: 0.15,
+    updated_at: Math.floor(Date.now()/1000) - 120,
+    history: generateHistory(95, 65, 2, 10),
+  },
+  {
+    group_name: 'Azure GPT-4',
+    last_test_model: 'gpt-4-turbo-2024-04-09',
+    is_online: true,
+    availability_rate: 100,
+    cache_hit_rate: 91.5,
+    avg_frt: 155,
+    group_ratio: 1.50,
+    updated_at: Math.floor(Date.now()/1000) - 120,
+    history: generateHistory(100, 91, 0.2, 2),
+  },
+  {
+    group_name: 'Mistral Large',
+    last_test_model: 'mistral-large-latest',
+    is_online: false,
+    availability_rate: -1,
+    cache_hit_rate: -1,
+    avg_frt: 0,
+    group_ratio: 0.60,
+    updated_at: Math.floor(Date.now()/1000) - 120,
+    history: [],
+  },
+];
+
+function generateHistory(baseAvail, baseCache, volatility, cacheVolatility) {
+  const points = 24;
+  const history = [];
+  const now = Math.floor(Date.now() / 1000);
+  for (let i = 0; i < points; i++) {
+    const t = now - (points - i) * 300; // 5-min intervals
+    const aRate = Math.min(100, Math.max(0, baseAvail + (Math.random() - 0.5) * volatility * 2));
+    const cRate = Math.min(100, Math.max(0, baseCache + (Math.random() - 0.5) * cacheVolatility * 2));
+    history.push({
+      recorded_at: t,
+      availability_rate: parseFloat(aRate.toFixed(2)),
+      cache_hit_rate: parseFloat(cRate.toFixed(2)),
+    });
+  }
+  return history;
+}
+
+// ── Helpers ──
+function getAvailClass(rate) {
+  if (rate < 0) return 'rate-na';
+  if (rate >= 99) return 'rate-excellent';
+  if (rate >= 95) return 'rate-good';
+  if (rate >= 90) return 'rate-warning';
+  return 'rate-critical';
+}
+
+function formatRate(rate) {
+  if (rate < 0) return '--';
+  return rate.toFixed(1) + '%';
+}
+
+function formatRatio(ratio) {
+  if (!ratio || ratio <= 0) return '--';
+  return ratio.toFixed(2) + '元/刀';
+}
+
+function formatFrt(frt) {
+  if (!frt || frt <= 0) return '--';
+  return (frt / 1000).toFixed(2) + 's';
+}
+
+// ── Render ──
+function render() {
+  const grid = document.getElementById('cardGrid');
+  grid.innerHTML = '';
+
+  const online = mockGroups.filter(g => g.is_online).length;
+  const offline = mockGroups.length - online;
+  document.getElementById('onlineCount').textContent = online;
+  document.getElementById('offlineCount').textContent = offline;
+  document.getElementById('totalCount').textContent = mockGroups.length;
+
+  mockGroups.forEach((group, idx) => {
+    const card = document.createElement('div');
+    card.className = 'status-card';
+
+    const availClass = getAvailClass(group.availability_rate);
+    const availWidth = group.availability_rate >= 0 ? group.availability_rate : 0;
+    const cacheWidth = group.cache_hit_rate >= 0 ? group.cache_hit_rate : 0;
+
+    const availProgressClass = group.availability_rate >= 0 ? 'progress-fill ' + availClass.replace('rate-', 'rate-') : 'progress-fill';
+    const cacheProgressFill = group.cache_hit_rate >= 0
+      ? `background: var(--cache-color); width: ${cacheWidth}%`
+      : `background: var(--bg-progress); width: 0%`;
+
+    const hasHistory = group.history && group.history.length > 0;
+    const firstTime = hasHistory ? new Date(group.history[0].recorded_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    const lastTime = hasHistory ? new Date(group.history[group.history.length-1].recorded_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+    card.innerHTML = `
+      <div class="card-header" style="margin-bottom:8px;">
+        <div class="card-title" style="flex:1;min-width:0;">${group.group_name}</div>
+        <div style="display:flex;align-items:center;flex-shrink:0;margin-left:12px;">
+          <div style="display:flex;flex-direction:column;align-items:center;padding:0 12px;">
+            <span style="font-size:10px;color:var(--text-tertiary);">首字速度</span>
+            <span class="metric-value" style="font-size:14px;">${formatFrt(group.avg_frt)}</span>
+          </div>
+          <div style="width:1px;height:24px;background:var(--border-color);"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;padding:0 12px;">
+            <span style="font-size:10px;color:var(--text-tertiary);">单价</span>
+            <span class="metric-value" style="font-size:14px;">${formatRatio(group.group_ratio)}</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="card-subtitle" style="margin-bottom:0;min-width:0;">${group.last_test_model || '--'}</div>
+        <span class="status-badge ${group.is_online ? 'online' : 'offline'}" style="flex-shrink:0;margin-left:8px;">
+          <span class="badge-dot"></span>
+          ${group.is_online ? '正常' : '异常'}
+        </span>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-label">
+          <span class="progress-label-text">可用率</span>
+          <span class="progress-label-value ${availClass}">${formatRate(group.availability_rate)}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill ${availClass.replace('rate-', 'rate-')}" style="width:${availWidth}%"></div>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-label">
+          <span class="progress-label-text">缓存命中率</span>
+          <span class="progress-label-value" style="color: ${group.cache_hit_rate >= 0 ? 'var(--cache-color)' : 'var(--text-tertiary)'}">${formatRate(group.cache_hit_rate)}</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="${cacheProgressFill}"></div>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <div class="chart-header">
+          <span class="chart-title">HISTORY</span>
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-dot avail"></span>可用率</span>
+            <span class="legend-item"><span class="legend-dot cache"></span>缓存率</span>
+          </div>
+        </div>
+        ${hasHistory
+          ? `<div class="chart-container"><canvas id="chart-${idx}"></canvas></div>
+             <div class="chart-time-labels">
+               <span class="chart-time-label">${firstTime}</span>
+               <span class="chart-time-label">${lastTime}</span>
+             </div>`
+          : `<div class="chart-no-data">暂无历史数据</div>`
+        }
+      </div>
+    `;
+
+    grid.appendChild(card);
+
+    // Draw chart
+    if (hasHistory) {
+      requestAnimationFrame(() => drawMiniChart(idx, group.history));
+    }
+  });
+}
+
+function drawMiniChart(idx, history) {
+  const canvas = document.getElementById(`chart-${idx}`);
+  if (!canvas) return;
+
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+  const labels = history.map(h =>
+    new Date(h.recorded_at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  );
+
+  const availData = history.map(h => h.availability_rate >= 0 ? h.availability_rate : null);
+  const cacheData = history.map(h => h.cache_hit_rate >= 0 ? h.cache_hit_rate : null);
+
+  // Calculate y-axis bounds
+  const allValues = [...availData, ...cacheData].filter(v => v !== null);
+  const minVal = allValues.length > 0 ? Math.min(...allValues) : 0;
+  const yMin = Math.max(0, Math.floor(minVal) - 2);
+
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          data: availData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.08)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHitRadius: 8,
+        },
+        {
+          data: cacheData,
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34,197,94,0.06)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHitRadius: 8,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark ? '#2a2e3a' : '#fff',
+          titleColor: isDark ? '#e4e7ed' : '#1a1d23',
+          bodyColor: isDark ? '#9aa0ae' : '#5c6370',
+          borderColor: isDark ? '#3a3e4a' : '#e5e8ed',
+          borderWidth: 1,
+          padding: 8,
+          cornerRadius: 6,
+          titleFont: { size: 11 },
+          bodyFont: { size: 11 },
+          callbacks: {
+            title: (items) => items[0].label,
+            label: (ctx) => {
+              const name = ctx.datasetIndex === 0 ? '可用率' : '缓存率';
+              return `${name}: ${ctx.parsed.y != null ? ctx.parsed.y.toFixed(1) + '%' : '--'}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { display: false },
+        y: {
+          display: false,
+          min: yMin,
+          max: 100,
+        },
+      },
+    },
+  });
+}
+
+// ── Actions ──
+
+function handleRefresh() {
+  const btn = document.querySelector('.refresh-btn');
+  btn.innerHTML = '<svg class="spinning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>刷新中...';
+  const style = document.createElement('style');
+  style.textContent = '@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}.spinning{animation:spin 1s linear infinite}';
+  document.head.appendChild(style);
+  setTimeout(() => {
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>刷新';
+    style.remove();
+  }, 1500);
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  // Re-render to update charts with correct theme colors
+  // Destroy existing charts first
+  Chart.helpers.each(Chart.instances, (instance) => instance.destroy());
+  render();
+}
+
+// ── System theme detection ──
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.setAttribute('data-theme', 'dark');
+}
+
+// ── Init ──
+render();
+</script>
+</body>
+</html>
