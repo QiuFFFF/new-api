@@ -1,0 +1,143 @@
+import React, { useEffect, useMemo } from 'react';
+import { VChart } from '@visactor/react-vchart';
+import { initVChartSemiTheme } from '@visactor/vchart-semi-theme';
+import { useTranslation } from 'react-i18next';
+
+const MiniHistoryChart = ({ history, periodMinutes, intervalMinutes }) => {
+  useEffect(() => {
+    initVChartSemiTheme({ isWatchingThemeSwitch: true });
+  }, []);
+  const { t } = useTranslation();
+
+  const chartData = useMemo(() => {
+    if (!history || history.length === 0) return [];
+
+    const stepSec = (intervalMinutes || 5) * 60;
+    const periodSec = (periodMinutes || 1440) * 60;
+    const now = Math.floor(Date.now() / 1000);
+
+    // Align a timestamp to the nearest step boundary
+    const align = (ts) => Math.round(ts / stepSec) * stepSec;
+
+    // Build map: aligned timestamp -> latest item
+    const dataMap = new Map();
+    history.forEach((item) => {
+      const key = align(item.recorded_at);
+      const existing = dataMap.get(key);
+      if (!existing || item.recorded_at > existing.recorded_at) {
+        dataMap.set(key, item);
+      }
+    });
+
+    // Generate complete time grid
+    const gridStart = align(now - periodSec);
+    const gridEnd = align(now);
+    const slots = [];
+    for (let ts = gridStart; ts <= gridEnd; ts += stepSec) {
+      slots.push(ts);
+    }
+
+    // Walk through slots with carry-forward
+    let lastAvail = -1;
+    let lastCache = -1;
+    const result = [];
+
+    for (const ts of slots) {
+      const item = dataMap.get(ts);
+      if (item) {
+        if (item.availability_rate >= 0) {
+          lastAvail = item.availability_rate;
+        }
+        if (item.cache_hit_rate >= 3) {
+          lastCache = item.cache_hit_rate;
+        }
+      }
+
+      const timeStr = new Date(ts * 1000).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      if (lastAvail >= 0) {
+        result.push({ time: timeStr, value: Math.min(parseFloat(lastAvail.toFixed(2)), 100), type: t('可用率') });
+      }
+      if (lastCache >= 0) {
+        result.push({ time: timeStr, value: Math.min(parseFloat(lastCache.toFixed(2)), 100), type: t('缓存命中率') });
+      }
+    }
+
+    return result;
+  }, [history, periodMinutes, intervalMinutes, t]);
+
+  if (!history || history.length === 0 || chartData.length === 0) {
+    return (
+      <div
+        className='flex items-center justify-center'
+        style={{ height: 80, color: 'var(--semi-color-text-2)' }}
+      >
+        <span style={{ fontSize: 12 }}>{t('暂无历史数据')}</span>
+      </div>
+    );
+  }
+
+  const values = chartData.map((d) => d.value);
+  const minValue = values.length > 0 ? Math.min(...values) : 0;
+  const yMin = Math.max(0, Math.floor(minValue) - 20);
+
+  // Get first and last time labels
+  const timeSet = new Set(chartData.map((d) => d.time));
+  const timeKeys = [...timeSet];
+  const firstTime = timeKeys[0] || '';
+  const lastTime = timeKeys[timeKeys.length - 1] || '';
+
+  const spec = {
+    type: 'line',
+    data: [{ id: 'data', values: chartData }],
+    xField: 'time',
+    yField: 'value',
+    seriesField: 'type',
+    point: { visible: false },
+    line: {
+      style: {
+        curveType: 'monotone',
+        lineWidth: 1.5,
+      },
+    },
+    axes: [
+      { orient: 'bottom', visible: false },
+      { orient: 'left', visible: false, min: yMin, max: 100 },
+    ],
+    legends: { visible: false },
+    tooltip: {
+      visible: true,
+      mark: {
+        content: [
+          {
+            key: (datum) => datum.type,
+            value: (datum) => datum.value + '%',
+          },
+        ],
+      },
+    },
+    color: ['#3b82f6', '#22c55e'],
+    padding: { top: 4, bottom: 4, left: 0, right: 0 },
+    animation: false,
+  };
+
+  return (
+    <div>
+      <div style={{ height: 80 }}>
+        <VChart spec={spec} option={{ mode: 'desktop-browser' }} />
+      </div>
+      <div
+        className='flex justify-between'
+        style={{ fontSize: 10, color: 'var(--semi-color-text-2)', marginTop: 2 }}
+      >
+        <span>{firstTime}</span>
+        <span>{lastTime}</span>
+      </div>
+    </div>
+  );
+};
+
+export default MiniHistoryChart;

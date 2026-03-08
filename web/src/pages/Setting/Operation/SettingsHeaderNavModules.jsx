@@ -46,6 +46,7 @@ export default function SettingsHeaderNavModules(props) {
       enabled: true,
       requireAuth: false, // 默认不需要登录鉴权
     },
+    monitoring: true,
     docs: true,
     about: true,
   });
@@ -86,6 +87,7 @@ export default function SettingsHeaderNavModules(props) {
         enabled: true,
         requireAuth: false,
       },
+      monitoring: true,
       docs: true,
       about: true,
     };
@@ -177,6 +179,11 @@ export default function SettingsHeaderNavModules(props) {
       title: t('模型广场'),
       description: t('模型定价，需要登录访问'),
       hasSubConfig: true, // 标识该模块有子配置
+    },
+    {
+      key: 'monitoring',
+      title: t('分组监控'),
+      description: t('分组可用率监控页面'),
     },
     {
       key: 'docs',
