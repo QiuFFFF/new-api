@@ -203,14 +203,6 @@ func (info *RelayInfo) InitChannelMeta(c *gin.Context) {
 	channelSetting, ok := common.GetContextKeyType[dto.ChannelSettings](c, constant.ContextKeyChannelSetting)
 	if ok {
 		channelMeta.ChannelSetting = channelSetting
-		if channelSetting.PassThroughHeadersEnabled {
-			if channelMeta.HeadersOverride == nil {
-				channelMeta.HeadersOverride = make(map[string]interface{})
-			}
-			if _, exists := channelMeta.HeadersOverride["*"]; !exists {
-				channelMeta.HeadersOverride["*"] = ""
-			}
-		}
 	}
 
 	channelOtherSettings, ok := common.GetContextKeyType[dto.ChannelOtherSettings](c, constant.ContextKeyChannelOtherSetting)

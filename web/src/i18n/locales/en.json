@@ -2974,8 +2974,6 @@
     "透传请求体": "Pass through body",
     "递归": "",
     "递归策略": "",
-    "透传请求头": "Pass through headers",
-    "启用请求头透传功能": "Enable request headers pass-through functionality",
     "通义千问": "Qwen",
     "通用设置": "General Settings",
     "通知": "Notice",
