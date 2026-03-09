@@ -246,7 +246,7 @@ const UserBindingManagementModal = ({
       key: 'wechat',
       field: 'wechat_id',
       name: t('微信'),
-      enabled: Boolean(statusInfo.wechat_login),
+      enabled: Boolean(statusInfo.wechat_login) || Boolean(statusInfo.wechat_verification),
       value: getBuiltInBindingValue('wechat_id'),
       icon: (
         <SiWechat size={20} className='text-slate-600 dark:text-slate-300' />
