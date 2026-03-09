@@ -157,6 +157,32 @@ func Register(c *gin.Context) {
 			return
 		}
 	}
+	if common.WeChatVerificationEnabled {
+		if common.WeChatServerAddress == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "微信验证服务未配置，请联系管理员",
+			})
+			return
+		}
+		if user.WeChatVerificationCode == "" {
+			common.ApiErrorI18n(c, i18n.MsgUserWeChatVerificationRequired)
+			return
+		}
+		wechatOpenId, err := getWeChatIdByCode(user.WeChatVerificationCode)
+		if err != nil {
+			common.ApiErrorI18n(c, i18n.MsgUserVerificationCodeError)
+			return
+		}
+		if model.IsWeChatIdAlreadyTaken(wechatOpenId) {
+			c.JSON(http.StatusOK, gin.H{
+				"success": false,
+				"message": "该微信账号已绑定其他用户，请直接登录",
+			})
+			return
+		}
+		user.WeChatId = wechatOpenId
+	}
 	exist, err := model.CheckUserExistOrDeleted(user.Username, user.Email)
 	if err != nil {
 		common.ApiErrorI18n(c, i18n.MsgDatabaseError)
@@ -178,6 +204,9 @@ func Register(c *gin.Context) {
 	}
 	if common.EmailVerificationEnabled {
 		cleanUser.Email = user.Email
+	}
+	if common.WeChatVerificationEnabled {
+		cleanUser.WeChatId = user.WeChatId
 	}
 	if err := cleanUser.Insert(inviterId); err != nil {
 		common.ApiError(c, err)

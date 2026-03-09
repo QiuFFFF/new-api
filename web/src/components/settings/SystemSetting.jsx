@@ -74,6 +74,7 @@ const SystemSetting = () => {
     WorkerAllowHttpImageRequestEnabled: '',
     Footer: '',
     WeChatAuthEnabled: '',
+    WeChatVerificationEnabled: '',
     WeChatServerAddress: '',
     WeChatServerToken: '',
     WeChatAccountQRCodeImageURL: '',
@@ -176,6 +177,7 @@ const SystemSetting = () => {
           case 'EmailVerificationEnabled':
           case 'GitHubOAuthEnabled':
           case 'WeChatAuthEnabled':
+          case 'WeChatVerificationEnabled':
           case 'TelegramOAuthEnabled':
           case 'RegisterEnabled':
           case 'TurnstileCheckEnabled':
@@ -1070,6 +1072,15 @@ const SystemSetting = () => {
                         }
                       >
                         {t('允许通过微信登录 & 注册')}
+                      </Form.Checkbox>
+                      <Form.Checkbox
+                        field='WeChatVerificationEnabled'
+                        noLabel
+                        onChange={(e) =>
+                          handleCheckboxChange('WeChatVerificationEnabled', e)
+                        }
+                      >
+                        {t('注册时要求微信验证码')}
                       </Form.Checkbox>
                       <Form.Checkbox
                         field='TelegramOAuthEnabled'

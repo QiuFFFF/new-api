@@ -47,6 +47,7 @@ var EmailVerificationEnabled = false
 var GitHubOAuthEnabled = false
 var LinuxDOOAuthEnabled = false
 var WeChatAuthEnabled = false
+var WeChatVerificationEnabled = false // 注册时要求微信验证码，独立于微信 OAuth 登录
 var TelegramOAuthEnabled = false
 var TurnstileCheckEnabled = false
 var RegisterEnabled = true

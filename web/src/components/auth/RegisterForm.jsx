@@ -80,6 +80,7 @@ const RegisterForm = () => {
     email: '',
     verification_code: '',
     wechat_verification_code: '',
+    wechat_register_code: '',
   });
   const { username, password, password2 } = inputs;
   const [userState, userDispatch] = useContext(UserContext);
@@ -142,9 +143,11 @@ const RegisterForm = () => {
   );
 
   const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [showWeChatVerification, setShowWeChatVerification] = useState(false);
 
   useEffect(() => {
     setShowEmailVerification(!!status?.email_verification);
+    setShowWeChatVerification(!!status?.wechat_verification);
     if (status?.turnstile_check) {
       setTurnstileEnabled(true);
       setTurnstileSiteKey(status.turnstile_site_key);
@@ -631,6 +634,24 @@ const RegisterForm = () => {
                       name='verification_code'
                       onChange={(value) =>
                         handleChange('verification_code', value)
+                      }
+                      prefix={<IconKey />}
+                    />
+                  </>
+                )}
+
+                {showWeChatVerification && (
+                  <>
+                    <div className='text-sm text-gray-500 dark:text-gray-400 px-1 py-1'>
+                      {t('请关注微信公众号，发送任意消息获取验证码，填写到下方')}
+                    </div>
+                    <Form.Input
+                      field='wechat_register_code'
+                      label={t('微信验证码')}
+                      placeholder={t('输入公众号返回的验证码')}
+                      name='wechat_register_code'
+                      onChange={(value) =>
+                        handleChange('wechat_register_code', value)
                       }
                       prefix={<IconKey />}
                     />
