@@ -642,8 +642,23 @@ const RegisterForm = () => {
 
                 {showWeChatVerification && (
                   <>
-                    <div className='text-sm text-gray-500 dark:text-gray-400 px-1 py-1'>
-                      {t('请关注微信公众号，发送任意消息获取验证码，填写到下方')}
+                    <div className='flex flex-col items-center gap-2 py-2'>
+                      {status?.wechat_qrcode ? (
+                        <>
+                          <img
+                            src={status.wechat_qrcode}
+                            alt='微信公众号二维码'
+                            className='w-32 h-32 rounded'
+                          />
+                          <p className='text-sm text-gray-500 dark:text-gray-400 text-center'>
+                            {t('扫码关注公众号，发送任意消息获取验证码')}
+                          </p>
+                        </>
+                      ) : (
+                        <p className='text-sm text-gray-500 dark:text-gray-400'>
+                          {t('请关注微信公众号，发送任意消息获取验证码，填写到下方')}
+                        </p>
+                      )}
                     </div>
                     <Form.Input
                       field='wechat_register_code'
