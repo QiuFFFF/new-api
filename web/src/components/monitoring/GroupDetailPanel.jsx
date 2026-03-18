@@ -96,11 +96,16 @@ const GroupDetailPanel = ({ groupName, isAdmin: isAdminUser, onClose, visible })
       title: t('状态'),
       dataIndex: 'is_online',
       width: 80,
-      render: (val) => (
-        <Tag color={val ? 'green' : 'red'} size='small'>
-          {val ? t('在线') : t('离线')}
-        </Tag>
-      ),
+      render: (val, record) => {
+        if (record.availability_rate < 0 && record.cache_hit_rate < 0) {
+          return <Tag color='grey' size='small'>{t('暂无调用')}</Tag>;
+        }
+        return (
+          <Tag color={val ? 'green' : 'red'} size='small'>
+            {val ? t('在线') : t('离线')}
+          </Tag>
+        );
+      },
     },
     {
       title: t('渠道状态'),
@@ -134,18 +139,17 @@ const GroupDetailPanel = ({ groupName, isAdmin: isAdminUser, onClose, visible })
       dataIndex: 'cache_hit_rate',
       width: 100,
       render: (val) => {
-        const effective = (val >= 0 && val < 3) ? -1 : val;
-        if (effective < 0) {
+        if (val < 0) {
           return (
             <Tag color='grey' size='small' type='light'>
               {t('尚未获取')}
             </Tag>
           );
         }
-        const color = effective >= 95 ? 'green' : effective >= 90 ? 'lime' : effective >= 85 ? 'yellow' : effective >= 75 ? 'orange' : 'red';
+        const color = val >= 95 ? 'green' : val >= 90 ? 'lime' : val >= 85 ? 'yellow' : val >= 75 ? 'orange' : 'red';
         return (
           <Tag color={color} size='small' type='light'>
-            {formatRate(effective)}
+            {formatRate(val)}
           </Tag>
         );
       },
@@ -207,7 +211,7 @@ const GroupDetailPanel = ({ groupName, isAdmin: isAdminUser, onClose, visible })
               <Table
                 columns={channelColumns}
                 dataSource={channelStats}
-                rowKey='id'
+                rowKey='channel_id'
                 pagination={false}
                 size='small'
               />

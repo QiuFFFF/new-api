@@ -175,7 +175,7 @@ const SiderBar = ({ onNavigate = () => {} }) => {
       {
         text: t('分组监控'),
         itemKey: 'group-monitoring',
-        to: '/group-monitoring',
+        to: '/console/group-monitoring',
         className: isAdmin() ? '' : 'tableHiddle',
       },
       {

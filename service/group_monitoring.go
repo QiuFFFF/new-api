@@ -1,8 +1,6 @@
 package service
 
 import (
-	"math"
-	"math/rand"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -13,48 +11,6 @@ import (
 	"github.com/QuantumNous/new-api/setting/operation_setting"
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 )
-
-// carryForwardFromPrev applies a small random ±2 offset to the previous rate for display
-// when no new requests exist at the channel level. Clamped to [0, 100].
-// Returns -1 if prevRate < 0 (no previous data).
-func carryForwardFromPrev(prevRate float64) float64 {
-	if prevRate < 0 {
-		return -1
-	}
-	offset := float64(rand.Intn(5) - 2) // -2 ~ +2
-	v := math.Round((prevRate+offset)*100) / 100
-	if v < 0 {
-		v = 0
-	}
-	if v > 100 {
-		v = 100
-	}
-	return v
-}
-
-// carryForwardFromHistory takes the average of the most recent 10 history records
-// and applies a small random ±2 offset. Used for group-level and history-level carry-forward.
-// Returns -1 if no historical data exists.
-func carryForwardFromHistory(groupName string, field string) float64 {
-	var avg float64
-	if field == "availability" {
-		avg = model.GetRecentAvailabilityAvg(groupName, 10)
-	} else {
-		avg = model.GetRecentCacheHitAvg(groupName, 10)
-	}
-	if avg < 0 {
-		return -1
-	}
-	offset := float64(rand.Intn(5) - 2)
-	v := math.Round((avg+offset)*100) / 100
-	if v < 0 {
-		v = 0
-	}
-	if v > 100 {
-		v = 100
-	}
-	return v
-}
 
 var (
 	groupMonitoringOnce    sync.Once
@@ -338,13 +294,6 @@ func runAggregationCycle(fullRefresh bool) {
 		}
 		totalChannels = len(channels)
 
-		// Fetch previous channel stats for carry-forward when a channel has no requests
-		prevChannelStats, _ := model.GetChannelMonitoringStatsByGroup(groupName)
-		prevChannelStatMap := make(map[int]*model.ChannelMonitoringStat, len(prevChannelStats))
-		for i := range prevChannelStats {
-			prevChannelStatMap[prevChannelStats[i].ChannelId] = &prevChannelStats[i]
-		}
-
 		// Get latest FRT for each channel in this group
 		channelIds := make([]int, 0, len(channels))
 		for _, ch := range channels {
@@ -416,18 +365,6 @@ func runAggregationCycle(fullRefresh bool) {
 				groupCacheDataPoints += cacheAgg.CacheDataPoints
 			}
 
-			// No requests for this channel — carry forward previous stat
-			if availRate < 0 || cacheHitRate < 0 {
-				if prev, ok := prevChannelStatMap[ch.Id]; ok {
-					if availRate < 0 {
-						availRate = carryForwardFromPrev(prev.AvailabilityRate)
-					}
-					if cacheHitRate < 0 {
-						cacheHitRate = carryForwardFromPrev(prev.CacheHitRate)
-					}
-				}
-			}
-
 			if testInfo != nil {
 				responseTime = testInfo.ResponseTime
 				testTime = testInfo.TestTime
@@ -496,9 +433,6 @@ func runAggregationCycle(fullRefresh bool) {
 
 		if groupTotalRequests > 0 {
 			groupAvailRate = float64(groupSuccessRequests) / float64(groupTotalRequests) * 100
-		} else {
-			// No requests in this period — carry forward from historical average
-			groupAvailRate = carryForwardFromHistory(groupName, "availability")
 		}
 		if groupCacheDataPoints > 0 {
 			var totalTokens int64
@@ -513,9 +447,6 @@ func runAggregationCycle(fullRefresh bool) {
 					groupCacheHitRate = 100
 				}
 			}
-		} else if groupTotalRequests == 0 {
-			// No cache data either — carry forward from historical average
-			groupCacheHitRate = carryForwardFromHistory(groupName, "cache")
 		}
 		if groupTotalRequests > 0 {
 			avgResponseTime = int(groupSumResponseTime / int64(groupTotalRequests))
@@ -617,16 +548,6 @@ func runAggregationCycle(fullRefresh bool) {
 					if intervalCacheRate > 100 {
 						intervalCacheRate = 100
 					}
-				}
-			}
-
-			// No requests in this interval — carry forward from historical average
-			if intervalAvailRate < 0 || intervalCacheRate < 0 {
-				if intervalAvailRate < 0 {
-					intervalAvailRate = carryForwardFromHistory(groupName, "availability")
-				}
-				if intervalCacheRate < 0 {
-					intervalCacheRate = carryForwardFromHistory(groupName, "cache")
 				}
 			}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, Button, Spin, Empty } from '@douyinfe/semi-ui';
 import { RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,8 @@ const GroupMonitoringDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const prevIntervalRef = useRef(null);
+  const groupsRef = useRef([]);
 
   const fetchHistory = useCallback(async (groupList) => {
     if (!groupList || groupList.length === 0) return;
@@ -85,10 +87,22 @@ const GroupMonitoringDashboard = () => {
   }, [t, fetchHistory]);
 
   useEffect(() => {
+    groupsRef.current = groups;
+  }, [groups]);
+
+  useEffect(() => {
     fetchGroups(true);
-    const interval = setInterval(() => fetchGroups(false), 60000);
+    const interval = setInterval(() => fetchGroups(true), 60000);
     return () => clearInterval(interval);
   }, [fetchGroups]);
+
+  // Refetch history when interval changes (not on mount)
+  useEffect(() => {
+    if (prevIntervalRef.current !== null && prevIntervalRef.current !== intervalMinutes && intervalMinutes !== null && groupsRef.current.length > 0) {
+      fetchHistory(groupsRef.current);
+    }
+    prevIntervalRef.current = intervalMinutes;
+  }, [intervalMinutes, fetchHistory]);
 
   const handleRefresh = async () => {
     if (!isAdmin()) return;
@@ -124,8 +138,9 @@ const GroupMonitoringDashboard = () => {
     );
   }
 
-  const onlineCount = groups.filter((g) => g.is_online ?? g.online_channels > 0).length;
-  const offlineCount = groups.length - onlineCount;
+  const noTrafficCount = groups.filter((g) => !(g.has_traffic ?? (g.availability_rate >= 0))).length;
+  const onlineCount = groups.filter((g) => (g.has_traffic ?? (g.availability_rate >= 0 || g.cache_hit_rate >= 0)) && (g.is_online ?? (g.availability_rate >= 90 || (g.availability_rate < 0 && g.cache_hit_rate >= 0)))).length;
+  const offlineCount = groups.length - onlineCount - noTrafficCount;
   const updatedAt = groups.length > 0 && groups[0]?.updated_at
     ? formatTimeAgo(groups[0].updated_at, t)
     : null;
@@ -150,6 +165,12 @@ const GroupMonitoringDashboard = () => {
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--semi-color-success)', display: 'inline-block' }} />
               {onlineCount} {t('正常')}
             </span>
+            {noTrafficCount > 0 && (
+              <span className='flex items-center' style={{ gap: 5, fontSize: 13, fontWeight: 500, color: 'var(--semi-color-text-2)' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--semi-color-text-2)', display: 'inline-block' }} />
+                {noTrafficCount} {t('暂无调用')}
+              </span>
+            )}
             <span className='flex items-center' style={{ gap: 5, fontSize: 13, fontWeight: 500, color: 'var(--semi-color-text-1)' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--semi-color-danger)', display: 'inline-block' }} />
               {offlineCount} {t('异常')}

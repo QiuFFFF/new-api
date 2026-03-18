@@ -5,11 +5,12 @@ import MiniHistoryChart from './MiniHistoryChart';
 const GroupStatusCard = ({ group, isSelected, onClick, history, periodMinutes, intervalMinutes }) => {
   const { t } = useTranslation();
 
-  const isOnline = group.is_online ?? group.online_channels > 0;
+  const hasTraffic = group.has_traffic ?? (group.availability_rate >= 0);
+  const isOnline = group.is_online ?? (group.availability_rate >= 90 || (group.availability_rate < 0 && group.cache_hit_rate >= 0));
+  // status: 'no_traffic' | 'online' | 'offline'
+  const status = !hasTraffic ? 'no_traffic' : isOnline ? 'online' : 'offline';
   const availRate = group.availability_rate;
-  const rawCacheRate = group.cache_hit_rate;
-  // Cache hit rate below 3% is treated as "not yet collected"
-  const cacheRate = (rawCacheRate >= 0 && rawCacheRate < 3) ? -1 : rawCacheRate;
+  const cacheRate = group.cache_hit_rate;
 
   const formatRate = (rate) => {
     if (rate == null || isNaN(rate) || rate < 0) return '--';
@@ -104,11 +105,15 @@ const GroupStatusCard = ({ group, isSelected, onClick, history, periodMinutes, i
             padding: '3px 10px',
             borderRadius: 20,
             flexShrink: 0,
-            background: isOnline
+            background: status === 'online'
               ? 'var(--semi-color-success-light-default)'
+              : status === 'no_traffic'
+              ? 'var(--semi-color-fill-0)'
               : 'var(--semi-color-danger-light-default)',
-            color: isOnline
+            color: status === 'online'
               ? 'var(--semi-color-success)'
+              : status === 'no_traffic'
+              ? 'var(--semi-color-text-2)'
               : 'var(--semi-color-danger)',
           }}
         >
@@ -117,10 +122,14 @@ const GroupStatusCard = ({ group, isSelected, onClick, history, periodMinutes, i
               width: 6,
               height: 6,
               borderRadius: '50%',
-              background: isOnline ? 'var(--semi-color-success)' : 'var(--semi-color-danger)',
+              background: status === 'online'
+                ? 'var(--semi-color-success)'
+                : status === 'no_traffic'
+                ? 'var(--semi-color-text-2)'
+                : 'var(--semi-color-danger)',
             }}
           />
-          {isOnline ? t('正常') : t('异常')}
+          {status === 'online' ? t('正常') : status === 'no_traffic' ? t('暂无调用') : t('异常')}
         </span>
       </div>
 

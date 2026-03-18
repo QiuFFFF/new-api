@@ -417,16 +417,19 @@ func AggregateCacheHitByGroupChannel(bucketStart int64, excludeModels []string) 
 
 // groupContainsCondition returns a SQL condition that matches a group name
 // within a comma-separated list stored in the group column (e.g. "g1,g2,g3").
+// Spaces are normalized to handle "g1, g2" format.
 func groupContainsCondition() string {
 	if common.UsingMySQL {
-		return `CONCAT(',', ` + commonGroupCol + `, ',') LIKE ?`
+		return `CONCAT(',', REPLACE(` + commonGroupCol + `, ' ', ''), ',') LIKE ?`
 	}
-	return `(',' || ` + commonGroupCol + ` || ',') LIKE ?`
+	return `(',' || REPLACE(` + commonGroupCol + `, ' ', '') || ',') LIKE ?`
 }
 
 // groupContainsArg returns the LIKE argument for groupContainsCondition.
+// Spaces are removed from groupName to match normalized group column.
 func groupContainsArg(groupName string) string {
-	return "%," + groupName + ",%"
+	normalizedName := strings.ReplaceAll(groupName, " ", "")
+	return "%," + normalizedName + ",%"
 }
 
 // GetChannelsByGroup retrieves all enabled channels that belong to a specific group
@@ -534,52 +537,6 @@ func GetMonitoringHistory(groupName string, startTime int64, endTime int64) ([]M
 	return history, err
 }
 
-// GetLastMonitoringHistoryBefore returns the most recent history record before the given timestamp.
-// Used as a seed value for carry-forward when the period window has no data.
-func GetLastMonitoringHistoryBefore(groupName string, before int64) (*MonitoringHistory, error) {
-	var h MonitoringHistory
-	err := DB.Where("group_name = ? AND recorded_at < ?", groupName, before).
-		Order("recorded_at DESC").First(&h).Error
-	if err != nil {
-		return nil, err
-	}
-	return &h, nil
-}
-
-// GetRecentAvailabilityAvg returns the average availability_rate from the most recent `limit`
-// valid records (availability_rate >= 0) for a group. Returns -1 if no data exists.
-func GetRecentAvailabilityAvg(groupName string, limit int) float64 {
-	// Use subquery: AVG over the top-N rows ordered by recorded_at DESC
-	sub := DB.Model(&MonitoringHistory{}).
-		Select("availability_rate").
-		Where("group_name = ? AND availability_rate >= 0", groupName).
-		Order("recorded_at DESC").
-		Limit(limit)
-
-	var avg *float64
-	err := DB.Table("(?) AS sub", sub).Select("AVG(sub.availability_rate)").Scan(&avg).Error
-	if err != nil || avg == nil {
-		return -1
-	}
-	return *avg
-}
-
-// GetRecentCacheHitAvg returns the average cache_hit_rate from the most recent `limit`
-// valid records (cache_hit_rate >= 0) for a group. Returns -1 if no data exists.
-func GetRecentCacheHitAvg(groupName string, limit int) float64 {
-	sub := DB.Model(&MonitoringHistory{}).
-		Select("cache_hit_rate").
-		Where("group_name = ? AND cache_hit_rate >= 0", groupName).
-		Order("recorded_at DESC").
-		Limit(limit)
-
-	var avg *float64
-	err := DB.Table("(?) AS sub", sub).Select("AVG(sub.cache_hit_rate)").Scan(&avg).Error
-	if err != nil || avg == nil {
-		return -1
-	}
-	return *avg
-}
 
 // CleanupOldRequestStats deletes request_stats older than the given timestamp
 func CleanupOldRequestStats(before int64) (int64, error) {

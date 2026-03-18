@@ -36,10 +36,30 @@ func GetAdminMonitoringGroups(c *gin.Context) {
 	// Order by GroupDisplayOrder if set
 	orderedStats := orderGroupStats(stats, setting.GroupDisplayOrder)
 
+	// Add computed fields for frontend
+	enrichedStats := make([]gin.H, 0, len(orderedStats))
+	for _, s := range orderedStats {
+		enrichedStats = append(enrichedStats, gin.H{
+			"id":                s.Id,
+			"group_name":        s.GroupName,
+			"availability_rate": s.AvailabilityRate,
+			"cache_hit_rate":    s.CacheHitRate,
+			"avg_response_time": s.AvgResponseTime,
+			"avg_frt":           s.AvgFRT,
+			"online_channels":   s.OnlineChannels,
+			"total_channels":    s.TotalChannels,
+			"group_ratio":       s.GroupRatio,
+			"last_test_model":   s.LastTestModel,
+			"updated_at":        s.UpdatedAt,
+			"has_traffic":       s.AvailabilityRate >= 0 || s.CacheHitRate >= 0,
+			"is_online":         s.AvailabilityRate >= 90 || (s.AvailabilityRate < 0 && s.CacheHitRate >= 0),
+		})
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
-		"data":    orderedStats,
+		"data":    enrichedStats,
 	})
 }
 
@@ -130,7 +150,11 @@ func GetAdminMonitoringGroupHistory(c *gin.Context) {
 
 	setting := operation_setting.GetGroupMonitoringSetting()
 	endTime := time.Now().Unix()
-	startTime := endTime - int64(setting.AvailabilityPeriodMinutes*60)
+	periodMinutes := setting.AvailabilityPeriodMinutes
+	if setting.CacheHitPeriodMinutes > periodMinutes {
+		periodMinutes = setting.CacheHitPeriodMinutes
+	}
+	startTime := endTime - int64(periodMinutes*60)
 
 	history, err := model.GetMonitoringHistory(groupName, startTime, endTime)
 	if err != nil {
@@ -141,14 +165,11 @@ func GetAdminMonitoringGroupHistory(c *gin.Context) {
 		return
 	}
 
-	// Prepend the last record before the window as a carry-forward seed
-	history = prependSeedRecord(groupName, startTime, history)
-
 	c.JSON(http.StatusOK, gin.H{
 		"success":                      true,
 		"message":                      "",
 		"data":                         history,
-		"period_minutes":               setting.AvailabilityPeriodMinutes,
+		"period_minutes":               periodMinutes,
 		"aggregation_interval_minutes": setting.AggregationIntervalMinutes,
 	})
 }
@@ -268,7 +289,11 @@ func GetPublicMonitoringGroupHistory(c *gin.Context) {
 	}
 
 	endTime := time.Now().Unix()
-	startTime := endTime - int64(setting.AvailabilityPeriodMinutes*60)
+	periodMinutes := setting.AvailabilityPeriodMinutes
+	if setting.CacheHitPeriodMinutes > periodMinutes {
+		periodMinutes = setting.CacheHitPeriodMinutes
+	}
+	startTime := endTime - int64(periodMinutes*60)
 
 	history, err := model.GetMonitoringHistory(groupName, startTime, endTime)
 	if err != nil {
@@ -279,14 +304,11 @@ func GetPublicMonitoringGroupHistory(c *gin.Context) {
 		return
 	}
 
-	// Prepend the last record before the window as a carry-forward seed
-	history = prependSeedRecord(groupName, startTime, history)
-
 	c.JSON(http.StatusOK, gin.H{
 		"success":                      true,
 		"message":                      "",
 		"data":                         history,
-		"period_minutes":               setting.AvailabilityPeriodMinutes,
+		"period_minutes":               periodMinutes,
 		"aggregation_interval_minutes": setting.AggregationIntervalMinutes,
 	})
 }
@@ -299,7 +321,8 @@ func desensitizeGroupStat(stat *model.GroupMonitoringStat) gin.H {
 		"cache_hit_rate":    stat.CacheHitRate,
 		"avg_response_time": stat.AvgResponseTime,
 		"avg_frt":           stat.AvgFRT,
-		"is_online": stat.OnlineChannels > 0,
+		"is_online":         stat.AvailabilityRate >= 90 || (stat.AvailabilityRate < 0 && stat.CacheHitRate >= 0),
+		"has_traffic":       stat.AvailabilityRate >= 0 || stat.CacheHitRate >= 0,
 		"group_ratio":       stat.GroupRatio,
 		"last_test_model":   stat.LastTestModel,
 		"updated_at":        stat.UpdatedAt,
@@ -372,17 +395,4 @@ func orderDesensitizedStats(stats []gin.H, order []string) []gin.H {
 	}
 
 	return ordered
-}
-
-// prependSeedRecord fetches the last history record before startTime and prepends it
-// to the history slice. This gives the frontend a seed value for carry-forward filling
-// when the period window starts with no data.
-func prependSeedRecord(groupName string, startTime int64, history []model.MonitoringHistory) []model.MonitoringHistory {
-	seed, err := model.GetLastMonitoringHistoryBefore(groupName, startTime)
-	if err != nil || seed == nil {
-		return history
-	}
-	// Place the seed at the window start boundary so frontend aligns it correctly
-	seed.RecordedAt = startTime
-	return append([]model.MonitoringHistory{*seed}, history...)
 }

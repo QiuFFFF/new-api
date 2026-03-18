@@ -132,10 +132,10 @@ export default function SettingsGroupMonitoring(props) {
       const config = sidebarConfigRef.current
         ? structuredClone(sidebarConfigRef.current)
         : {};
-      if (!config.console) {
-        config.console = { enabled: true };
+      if (!config.admin) {
+        config.admin = { enabled: true };
       }
-      config.console['group-monitoring'] = sidebarEnabled;
+      config.admin['group-monitoring'] = sidebarEnabled;
       sidebarConfigRef.current = config;
       requestQueue.push(
         API.put('/api/option/', {
@@ -248,7 +248,7 @@ export default function SettingsGroupMonitoring(props) {
       try {
         const config = JSON.parse(props.options.SidebarModulesAdmin);
         sidebarConfigRef.current = config;
-        const enabled = config?.console?.['group-monitoring'] !== false;
+        const enabled = config?.admin?.['group-monitoring'] !== false;
         setSidebarEnabled(enabled);
         setSidebarEnabledOriginal(enabled);
       } catch (e) {
