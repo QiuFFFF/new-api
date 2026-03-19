@@ -149,7 +149,11 @@ const AvailabilityCacheChart = ({ history, periodMinutes, intervalMinutes }) => 
         ],
       },
     },
-    color: ['#3b82f6', '#22c55e'],
+    color: {
+      type: 'ordinal',
+      domain: [t('可用率'), t('缓存命中率')],
+      range: ['#3b82f6', '#22c55e'],
+    },
   };
 
   return (

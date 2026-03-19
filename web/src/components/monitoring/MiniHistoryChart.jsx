@@ -119,7 +119,11 @@ const MiniHistoryChart = ({ history, periodMinutes, intervalMinutes }) => {
         ],
       },
     },
-    color: ['#3b82f6', '#22c55e'],
+    color: {
+      type: 'ordinal',
+      domain: [t('可用率'), t('缓存命中率')],
+      range: ['#3b82f6', '#22c55e'],
+    },
     padding: { top: 4, bottom: 4, left: 0, right: 0 },
     animation: false,
   };
