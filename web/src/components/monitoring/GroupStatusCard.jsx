@@ -31,6 +31,15 @@ const GroupStatusCard = ({ group, isSelected, onClick, history, periodMinutes, i
     return (frt / 1000).toFixed(2) + 's';
   };
 
+  const getFrtColor = (frt) => {
+    if (!frt || frt <= 0) return 'var(--semi-color-text-2)';
+    if (frt <= 3000) return '#22c55e';
+    if (frt <= 5000) return '#65a30d';
+    if (frt <= 7000) return '#f59e0b';
+    if (frt <= 10000) return '#ea580c';
+    return '#ef4444';
+  };
+
   // Rate color mapping (unified for both availability and cache hit rate)
   const getRateColor = (rate) => {
     if (rate < 0) return 'var(--semi-color-text-2)';
@@ -158,7 +167,7 @@ const GroupStatusCard = ({ group, isSelected, onClick, history, periodMinutes, i
           style={{
             fontSize: 12,
             fontWeight: 600,
-            color: 'var(--semi-color-text-2)',
+            color: getFrtColor(group.avg_frt),
             fontVariantNumeric: 'tabular-nums',
             flexShrink: 0,
           }}

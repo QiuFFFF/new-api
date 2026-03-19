@@ -154,7 +154,15 @@ const GroupDetailPanel = ({ groupName, isAdmin: isAdminUser, onClose, visible })
       title: t('首字速度'),
       dataIndex: 'last_frt',
       width: 100,
-      render: (val) => (val > 0 ? val + 'ms' : '--'),
+      render: (val) => {
+        if (!val || val <= 0) return '--';
+        const color = val <= 3000 ? 'green' : val <= 5000 ? 'lime' : val <= 7000 ? 'yellow' : val <= 10000 ? 'orange' : 'red';
+        return (
+          <Tag color={color} size='small' type='light'>
+            {val + 'ms'}
+          </Tag>
+        );
+      },
     },
     {
       title: t('测试模型'),
