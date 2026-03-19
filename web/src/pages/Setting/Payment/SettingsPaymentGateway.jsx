@@ -43,6 +43,7 @@ export default function SettingsPaymentGateway(props) {
     PayMethods: '',
     AmountOptions: '',
     AmountDiscount: '',
+    EpayProductNameWithSiteName: false,
   });
   const [originInputs, setOriginInputs] = useState({});
   const formApiRef = useRef(null);
@@ -66,6 +67,8 @@ export default function SettingsPaymentGateway(props) {
         PayMethods: props.options.PayMethods || '',
         AmountOptions: props.options.AmountOptions || '',
         AmountDiscount: props.options.AmountDiscount || '',
+        EpayProductNameWithSiteName:
+          props.options.EpayProductNameWithSiteName === 'true',
       };
 
       // 美化 JSON 展示
@@ -162,6 +165,10 @@ export default function SettingsPaymentGateway(props) {
           value: inputs.CustomCallbackAddress,
         });
       }
+      options.push({
+        key: 'EpayProductNameWithSiteName',
+        value: inputs.EpayProductNameWithSiteName.toString(),
+      });
       if (originInputs['TopupGroupRatio'] !== inputs.TopupGroupRatio) {
         options.push({ key: 'TopupGroupRatio', value: inputs.TopupGroupRatio });
       }
@@ -270,6 +277,20 @@ export default function SettingsPaymentGateway(props) {
                 field='MinTopUp'
                 label={t('最低充值美元数量')}
                 placeholder={t('例如：2，就是最低充值2$')}
+              />
+            </Col>
+          </Row>
+          <Row
+            gutter={{ xs: 8, sm: 16, md: 24, lg: 24, xl: 24, xxl: 24 }}
+            style={{ marginTop: 16 }}
+          >
+            <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+              <Form.Switch
+                field='EpayProductNameWithSiteName'
+                label={t('商品名称显示平台名称')}
+                extraText={t(
+                  '开启后，支付商品名称将自动添加平台名称前缀',
+                )}
               />
             </Col>
           </Row>

@@ -895,6 +895,8 @@
     "回调 URL 填": "Remplir l'URL de rappel",
     "回调 URL 格式": "",
     "回调地址": "Adresse de rappel",
+    "商品名称显示平台名称": "Afficher le nom du site dans le nom du produit",
+    "开启后，支付商品名称将自动添加平台名称前缀": "Lorsque cette option est activée, le nom du produit de paiement inclura automatiquement le nom du site en préfixe",
     "固定价格": "Prix fixe",
     "固定价格(每次)": "Prix fixe (par utilisation)",
     "固定价格值": "Valeur de prix fixe",

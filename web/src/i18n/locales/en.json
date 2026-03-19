@@ -910,6 +910,8 @@
     "回调 URL 填": "Callback URL Fill",
     "回调 URL 格式": "Callback URL format",
     "回调地址": "Callback address",
+    "商品名称显示平台名称": "Show site name in product name",
+    "开启后，支付商品名称将自动添加平台名称前缀": "When enabled, the payment product name will automatically include the site name as a prefix",
     "固定价格": "Fixed Price",
     "固定价格(每次)": "Fixed Price (per use)",
     "固定价格值": "Fixed Price Value",

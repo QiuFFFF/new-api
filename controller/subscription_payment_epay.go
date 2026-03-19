@@ -97,7 +97,7 @@ func SubscriptionRequestEpay(c *gin.Context) {
 	uri, params, err := client.Purchase(&epay.PurchaseArgs{
 		Type:           req.PaymentMethod,
 		ServiceTradeNo: tradeNo,
-		Name:           fmt.Sprintf("SUB:%s", plan.Title),
+		Name:           epayProductName(plan.Title),
 		Money:          strconv.FormatFloat(plan.PriceAmount, 'f', 2, 64),
 		Device:         epay.PC,
 		NotifyUrl:      notifyUrl,

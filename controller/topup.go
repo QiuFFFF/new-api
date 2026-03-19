@@ -71,6 +71,13 @@ type AmountRequest struct {
 	Amount int64 `json:"amount"`
 }
 
+func epayProductName(name string) string {
+	if operation_setting.EpayProductNameWithSiteName && common.SystemName != "" {
+		return common.SystemName + " - " + name
+	}
+	return name
+}
+
 func GetEpayClient() *epay.Client {
 	if operation_setting.PayAddress == "" || operation_setting.EpayId == "" || operation_setting.EpayKey == "" {
 		return nil
@@ -167,7 +174,7 @@ func RequestEpay(c *gin.Context) {
 	uri, params, err := client.Purchase(&epay.PurchaseArgs{
 		Type:           req.PaymentMethod,
 		ServiceTradeNo: tradeNo,
-		Name:           fmt.Sprintf("TUC%d", req.Amount),
+		Name:           epayProductName(fmt.Sprintf("充值%d美元", req.Amount)),
 		Money:          strconv.FormatFloat(payMoney, 'f', 2, 64),
 		Device:         epay.PC,
 		NotifyUrl:      notifyUrl,

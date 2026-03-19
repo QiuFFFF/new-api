@@ -887,6 +887,8 @@
     "回调 URL 填": "Điền URL gọi lại",
     "回调 URL 格式": "",
     "回调地址": "Địa chỉ gọi lại",
+    "商品名称显示平台名称": "Hiển thị tên trang web trong tên sản phẩm",
+    "开启后，支付商品名称将自动添加平台名称前缀": "Khi bật, tên sản phẩm thanh toán sẽ tự động thêm tiền tố tên trang web",
     "固定价格": "Giá cố định",
     "固定价格(每次)": "Giá cố định (mỗi lần)",
     "固定价格值": "Giá trị giá cố định",
