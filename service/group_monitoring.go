@@ -398,13 +398,18 @@ func runAggregationCycle(fullRefresh bool) {
 			}
 
 			// No requests for this channel — carry forward previous stat
+			// Only when channel is "healthy idle" (last log success).
+			// Faulty idle (last log failure) → skip carry-forward → show -1.
 			if availRate < 0 || cacheHitRate < 0 {
-				if prev, ok := prevChannelStatMap[ch.Id]; ok {
-					if availRate < 0 {
-						availRate = carryForwardFromPrev(prev.AvailabilityRate)
-					}
-					if cacheHitRate < 0 {
-						cacheHitRate = carryForwardFromPrev(prev.CacheHitRate)
+				channelOnline := onlineMap == nil || onlineMap[ch.Id]
+				if channelOnline {
+					if prev, ok := prevChannelStatMap[ch.Id]; ok {
+						if availRate < 0 {
+							availRate = carryForwardFromPrev(prev.AvailabilityRate)
+						}
+						if cacheHitRate < 0 {
+							cacheHitRate = carryForwardFromPrev(prev.CacheHitRate)
+						}
 					}
 				}
 			}
@@ -477,8 +482,8 @@ func runAggregationCycle(fullRefresh bool) {
 
 		if groupTotalRequests > 0 {
 			groupAvailRate = float64(groupSuccessRequests) / float64(groupTotalRequests) * 100
-		} else {
-			// No requests in this period — carry forward from historical average
+		} else if onlineChannels > 0 {
+			// No requests in this period — carry forward from historical average (healthy idle)
 			groupAvailRate = carryForwardFromHistory(groupName, "availability")
 		}
 		if groupCacheDataPoints > 0 {
@@ -494,8 +499,8 @@ func runAggregationCycle(fullRefresh bool) {
 					groupCacheHitRate = 100
 				}
 			}
-		} else if groupTotalRequests == 0 {
-			// No cache data either — carry forward from historical average
+		} else if groupTotalRequests == 0 && onlineChannels > 0 {
+			// No cache data either — carry forward from historical average (healthy idle)
 			groupCacheHitRate = carryForwardFromHistory(groupName, "cache")
 		}
 		if groupTotalRequests > 0 {
@@ -601,8 +606,8 @@ func runAggregationCycle(fullRefresh bool) {
 				}
 			}
 
-			// No requests in this interval — carry forward from historical average
-			if intervalAvailRate < 0 || intervalCacheRate < 0 {
+			// No requests in this interval — carry forward only if some channels online
+			if (intervalAvailRate < 0 || intervalCacheRate < 0) && onlineChannels > 0 {
 				if intervalAvailRate < 0 {
 					intervalAvailRate = carryForwardFromHistory(groupName, "availability")
 				}

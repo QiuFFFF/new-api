@@ -47,10 +47,15 @@ const MiniHistoryChart = ({ history, periodMinutes, intervalMinutes }) => {
       if (item) {
         if (item.availability_rate >= 0) {
           lastAvail = item.availability_rate;
+        } else {
+          lastAvail = -1; // Faulty/no-data → reset, don't carry forward stale value
         }
         if (item.cache_hit_rate >= 3) {
           lastCache = item.cache_hit_rate;
+        } else if (item.cache_hit_rate < 0) {
+          lastCache = -1; // Faulty/no-data → reset
         }
+        // 0 <= cache_hit_rate < 3: keep current (very low value treated as "not collected")
       }
 
       const timeStr = new Date(ts * 1000).toLocaleTimeString([], {
