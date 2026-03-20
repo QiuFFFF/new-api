@@ -2,7 +2,6 @@ package service
 
 import (
 	"math"
-	"math/rand"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -14,27 +13,24 @@ import (
 	"github.com/QuantumNous/new-api/setting/ratio_setting"
 )
 
-// carryForwardFromPrev applies a small random ±2 offset to the previous rate for display
-// when no new requests exist at the channel level. Clamped to [0, 100].
-// Returns -1 if prevRate < 0 (no previous data).
+// carryForwardFromPrev applies exponential decay to the previous rate
+// when no new requests exist at the channel level.
+// Returns -1 if prevRate < 0 (no previous data) or decayed below threshold.
 func carryForwardFromPrev(prevRate float64) float64 {
 	if prevRate < 0 {
 		return -1
 	}
-	offset := float64(rand.Intn(5) - 2) // -2 ~ +2
-	v := math.Round((prevRate+offset)*100) / 100
-	if v < 0 {
-		v = 0
-	}
-	if v > 100 {
-		v = 100
+	const decayFactor = 0.85 // decay 15% per cycle
+	v := math.Round(prevRate*decayFactor*100) / 100
+	if v < 3 {
+		return -1 // below display threshold, mark as "no data"
 	}
 	return v
 }
 
 // carryForwardFromHistory takes the average of the most recent 10 history records
-// and applies a small random ±2 offset. Used for group-level and history-level carry-forward.
-// Returns -1 if no historical data exists.
+// and applies exponential decay. Used for group-level and history-level carry-forward.
+// Returns -1 if no historical data exists or decayed below threshold.
 func carryForwardFromHistory(groupName string, field string) float64 {
 	var avg float64
 	if field == "availability" {
@@ -45,13 +41,10 @@ func carryForwardFromHistory(groupName string, field string) float64 {
 	if avg < 0 {
 		return -1
 	}
-	offset := float64(rand.Intn(5) - 2)
-	v := math.Round((avg+offset)*100) / 100
-	if v < 0 {
-		v = 0
-	}
-	if v > 100 {
-		v = 100
+	const decayFactor = 0.85 // decay 15% per cycle
+	v := math.Round(avg*decayFactor*100) / 100
+	if v < 3 {
+		return -1 // below display threshold, mark as "no data"
 	}
 	return v
 }
